@@ -1,0 +1,186 @@
+# ============================================
+# ROBOTS.TXT - BARBER IWAN
+# Instructies voor zoekmachines
+# ============================================
+
+User-agent: *
+Allow: /
+
+# Sitemap locatie
+Sitemap: https://barberiwan.nl/sitemap.xml
+
+# ============================================
+# GOOGLE BOTS
+# ============================================
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot-Video
+Allow: /
+
+User-agent: Googlebot-News
+Allow: /
+
+User-agent: Googlebot-Mobile
+Allow: /
+
+# ============================================
+# BING BOTS
+# ============================================
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: BingPreview
+Allow: /
+
+# ============================================
+# YANDEX
+# ============================================
+User-agent: Yandex
+Allow: /
+Crawl-delay: 2
+
+# ============================================
+# BAIDU
+# ============================================
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 2
+
+# ============================================
+# DUCKDUCKGO
+# ============================================
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+# ============================================
+# SOCIAL MEDIA BOTS
+# ============================================
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Pinterestbot
+Allow: /
+
+User-agent: Instagram
+Allow: /
+
+# ============================================
+# SEO TOOLS (Met crawl-delay)
+# ============================================
+User-agent: AhrefsBot
+Allow: /
+Crawl-delay: 5
+
+User-agent: AhrefsSiteAudit
+Allow: /
+Crawl-delay: 5
+
+User-agent: SemrushBot
+Allow: /
+Crawl-delay: 5
+
+User-agent: SemrushBot-SA
+Allow: /
+Crawl-delay: 5
+
+User-agent: MJ12bot
+Allow: /
+Crawl-delay: 5
+
+User-agent: DotBot
+Allow: /
+Crawl-delay: 5
+
+User-agent: Rogerbot
+Allow: /
+Crawl-delay: 5
+
+User-agent: Screaming Frog SEO Spider
+Allow: /
+Crawl-delay: 5
+
+# ============================================
+# BLOKKEREN - Ongewenste bots
+# ============================================
+User-agent: PetalBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: serpstatbot
+Disallow: /
+
+User-agent: MegaIndex.ru
+Disallow: /
+
+User-agent: XoviBot
+Disallow: /
+
+User-agent: SISTRIX
+Disallow: /
+
+User-agent: SEOkicks
+Disallow: /
+
+User-agent: BacklinkCrawler
+Disallow: /
+
+User-agent: spbot
+Disallow: /
+
+User-agent: Mail.RU_Bot
+Disallow: /
+
+# ============================================
+# DISALLOW - Pagina's die niet geïndexeerd moeten worden
+# ============================================
+
+# Admin en systeem pagina's
+Disallow: /admin/
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /wp-content/plugins/
+Disallow: /wp-content/themes/
+Disallow: /wp-includes/
+
+# Zoekresultaten
+Disallow: /?s=
+Disallow: /search/
+
+# Filters en parameters
+Disallow: /*?*
+Disallow: /*&*
+
+# Tijdelijke bestanden
+Disallow: /tmp/
+Disallow: /temp/
+Disallow: /cache/
+
+# Foutpagina's
+Disallow: /404/
+Disallow: /500/
+
+# ============================================
+# HOST
+# ============================================
+Host: https://barberiwan.nl
