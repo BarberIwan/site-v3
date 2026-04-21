@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "barber-iwan-v3",
+      name: "site-v3",
       script: "serve",
       args: "-s dist -l 3000",
       env: {
