@@ -20,8 +20,8 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
         localStorage.setItem('admin_user', result.username);
         onLogin();
       }
-    } catch (err: any) {
-      setError(err.message || 'Inloggen mislukt');
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : 'Inloggen mislukt');
     } finally {
       setLoading(false);
     }
@@ -105,9 +105,6 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
             </button>
           </form>
 
-          <p className="text-center text-white/30 text-xs mt-6">
-            Standaard: admin / admin123
-          </p>
         </div>
       </div>
     </div>

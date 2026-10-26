@@ -66,12 +66,18 @@ db.exec(`
   )
 `);
 
-// Insert default admin user
+// Eerste beheerder alleen met een zelfgekozen wachtwoord uit ADMIN_PASSWORD;
+// het oude vaste wachtwoord stond in deze openbare repo.
 const defaultUser = db.prepare('SELECT * FROM users WHERE username = ?').get('admin');
 if (!defaultUser) {
-  const bcrypt = require('bcryptjs');
-  const hashedPassword = bcrypt.hashSync('admin123', 10);
-  db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run('admin', hashedPassword);
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (adminPassword && adminPassword.length >= 12) {
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+    db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run('admin', hashedPassword);
+  } else {
+    console.warn('Geen beheerder aangemaakt: zet ADMIN_PASSWORD (minstens 12 tekens) in backend/.env.');
+  }
 }
 
 // Insert default content sections
