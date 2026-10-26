@@ -15,7 +15,33 @@ npm run build        # tsc, client-build, SSR-build en prerender
 (`/haircuts/index.html`, `/contact/index.html`, …), plus `404.html`,
 `sitemap.xml`, `llms.txt` en `serve.json`.
 
-## Uitrollen
+## Uitrollen met GitHub Actions
+
+`.github/workflows/deploy.yml` doet het hele rondje: bouwen met Node 22,
+`dist/` naast de huidige versie zetten, omwisselen en een rookproef tegen de live
+site. Mislukt de rookproef, dan zet hij de vorige versie terug. Starten:
+Actions → "Deploy naar barberiwan.nl" → Run workflow.
+
+Eenmalig instellen:
+
+1. Maak op je eigen computer een sleutelpaar alleen voor deze deploy:
+   `ssh-keygen -t ed25519 -C deploy-barberiwan -f deploy-barberiwan -N ""`
+2. Zet de inhoud van `deploy-barberiwan.pub` op de server achteraan in
+   `~/.ssh/authorized_keys` van de gebruiker die in `/var/www/html/site-v3` mag
+   schrijven.
+3. In GitHub, `site-v3` → Settings → Secrets and variables → Actions → New
+   repository secret:
+   - `DEPLOY_HOST`: `185.107.90.72`
+   - `DEPLOY_USER`: die gebruiker (bijvoorbeeld `root`)
+   - `DEPLOY_SSH_KEY`: de inhoud van `deploy-barberiwan` (de private key)
+   - `DEPLOY_KNOWN_HOSTS`: de uitvoer van `ssh-keyscan -H 185.107.90.72`
+4. Staat de site ergens anders dan `/var/www/html/site-v3/dist`? Zet dan onder
+   Variables `DEPLOY_PATH` op de map boven `dist`.
+
+Zonder secrets bouwt de workflow wel en zet hij de build als artefact
+(`dist-<commit>`) klaar; die kun je downloaden en met de hand uploaden.
+
+## Uitrollen met de hand
 
 1. Zet `dist/` op de plek waar nginx naar kijkt (nu `/var/www/html/site-v3/dist`).
 2. Dat werkt al met de huidige nginx (`try_files $uri $uri/ /index.html`):
