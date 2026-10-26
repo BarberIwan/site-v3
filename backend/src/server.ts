@@ -12,7 +12,11 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const JWT_SECRET = process.env.JWT_SECRET || 'barberiwan-secret-key-2024';
+// Geen standaardsleutel: die stond in deze openbare repo, dus iedereen kon er tokens mee maken.
+const JWT_SECRET: string = process.env.JWT_SECRET ?? '';
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET ontbreekt. Zet een lange, willekeurige waarde in backend/.env.');
+}
 
 // Middleware
 app.use(cors());

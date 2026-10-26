@@ -1,91 +1,20 @@
 {
-  "name": "Barber Iwan - Herenkapper Almere",
+  "name": "Barber Iwan – herenkapper Almere",
   "short_name": "Barber Iwan",
-  "description": "Barber Iwan in Almere - Specialist in herenkapsels, fades, baarden en alle haartypes. 30+ jaar ervaring.",
+  "description": "Herenkapper en barber in Almere. Knippen, fades, baard en kinderen, op afspraak.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#080808",
   "theme_color": "#080808",
-  "orientation": "portrait",
-  "scope": "/",
   "lang": "nl",
-  "dir": "ltr",
-  "categories": ["beauty", "lifestyle", "business"],
   "icons": [
-    {
-      "src": "/logo.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/hero-barber.jpg",
-      "sizes": "1280x720",
-      "type": "image/jpeg",
-      "form_factor": "wide",
-      "label": "Barber Iwan Homepage"
-    }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    {
-      "name": "Afspraak Maken",
-      "short_name": "Boeken",
-      "description": "Maak direct een afspraak",
-      "url": "/#booking",
-      "icons": [{ "src": "/logo.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Contact",
-      "short_name": "Contact",
-      "description": "Bekijk contactgegevens",
-      "url": "/#contact",
-      "icons": [{ "src": "/logo.png", "sizes": "96x96" }]
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false
+    { "name": "Afspraak maken", "url": "/#afspraak" },
+    { "name": "Prijzen", "url": "/behandelingen-en-prijzen/" }
+  ]
 }

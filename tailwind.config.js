@@ -5,6 +5,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // De huisstijlkleur; zonder deze regel deden klassen als border-gold/30 en fill-gold niets.
+        gold: "hsl(var(--gold) / <alpha-value>)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

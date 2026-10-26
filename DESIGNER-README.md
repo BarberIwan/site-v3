@@ -67,31 +67,7 @@ npm run server
 ```
 
 ### Stap 5: Configureer webserver (Nginx)
-```nginx
-server {
-    listen 80;
-    server_name barberiwan.nl www.barberiwan.nl;
-
-    # Frontend - statische bestanden
-    location / {
-        root /var/www/barberiwan/dist;
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Backend API
-    location /api/ {
-        proxy_pass http://localhost:3001/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    # Uploads
-    location /uploads/ {
-        alias /var/www/barberiwan/backend/uploads/;
-    }
-}
-```
+Zie `deploy/nginx/barberiwan.nl.conf` en `deploy/README.md`.
 
 ---
 
@@ -105,12 +81,12 @@ app/
 │   ├── hero-barber.jpg
 │   ├── ig-1.jpg t/m ig-6.jpg      # Instagram foto's
 │   ├── carousel-1/2/3.jpg         # Carousel foto's
-│   ├── sitemap.xml
+│   ├── img/                       # WebP-versies (npm run images)
 │   └── robots.txt
 ├── src/
-│   ├── App.tsx            # Hoofdpagina
-│   ├── Terms.tsx          # Algemene Voorwaarden
-│   ├── main.tsx           # Router config
+│   ├── entry-client.tsx   # Browser: hydrateert de vooraf gerenderde pagina
+│   ├── entry-server.tsx   # Build: rendert elke pagina naar HTML
+│   ├── site/              # Publieke site: data, pagina's, SEO, onderdelen
 │   ├── index.css          # Styling + animaties
 │   ├── services/api.ts    # API client
 │   └── admin/             # CMS admin panel
@@ -188,26 +164,25 @@ Automatisch aangemaakt bij eerste start. Bevat tabellen:
 - `instagram_feed` - Instagram items
 - `site_settings` - Contactgegevens, openingstijden
 
-**Standaard login:**
-- Username: `admin`
-- Wachtwoord: `admin123`
-
-**Direct wijzigen na eerste keer inloggen!**
+**Eerste login:** er is geen standaardwachtwoord meer. Zet in `backend/.env`
+`JWT_SECRET` (lange willekeurige tekst) en `ADMIN_PASSWORD` (minstens 12 tekens);
+bij de eerste start wordt dan gebruiker `admin` met dat wachtwoord aangemaakt.
 
 ---
 
 ## SEO
 
-De website is volledig geoptimaliseerd:
-- Meta tags (title, description, keywords)
-- Open Graph tags (voor social media)
-- Sitemap.xml (7 pagina's)
-- Robots.txt
-- Schema.org structured data (9 types)
-- Canonical URLs
-- PWA manifest.json
+Elke pagina wordt bij `npm run build` vooraf gerenderd tot volledige HTML
+(`src/entry-server.tsx` + `scripts/prerender.mjs`), met eigen title,
+description, canonical, Open Graph en één schema.org-graph. Zoekmachines en
+AI-crawlers lezen de inhoud zonder JavaScript.
 
----
+- Alle feiten (adres, tijden, prijzen, reviews, FAQ, foto's): `src/site/data.ts`
+- Pagina's, titels en descriptions: `src/site/pages.ts`
+- Structured data: `src/site/seo.ts`; sitemap en llms.txt: `src/site/feeds.ts`
+- Nieuwe foto? Zet hem in `public/`, voeg hem toe in `data.ts` en draai
+  `npm run images` voor de WebP-versies.
+- Server, omleidingen en controles na een deploy: `deploy/README.md`
 
 ## Contact
 
