@@ -1,0 +1,117 @@
+name: Deploy naar barberiwan.nl
+
+# Handmatig starten: Actions → "Deploy naar barberiwan.nl" → Run workflow.
+#
+# Bouwt main met Node 22, zet dist/ naast de huidige versie op de server,
+# wisselt om en draait een rookproef tegen de live site. Mislukt die, dan
+# komt de vorige versie automatisch terug. De build staat ook als artefact
+# klaar, voor wie hem liever met de hand uploadt.
+#
+# Eenmalig nodig, onder Settings → Secrets and variables → Actions → Secrets:
+#   DEPLOY_HOST         185.107.90.72 (of de hostnaam van de server)
+#   DEPLOY_USER         de SSH-gebruiker, bijvoorbeeld root
+#   DEPLOY_SSH_KEY      de private key van een sleutelpaar voor deze deploy;
+#                       de public key staat in ~/.ssh/authorized_keys op de server
+#   DEPLOY_KNOWN_HOSTS  de uitvoer van `ssh-keyscan -H 185.107.90.72`
+# Optioneel, onder Variables: DEPLOY_PATH (standaard /var/www/html/site-v3).
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-productie
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/var/www/html/site-v3' }}
+      SITE: https://barberiwan.nl
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Afhankelijkheden
+        run: npm ci --no-audit --no-fund
+
+      - name: Bouwen
+        run: npm run build
+
+      - name: Build controleren
+        run: |
+          set -euo pipefail
+          for f in index.html behandelingen-en-prijzen/index.html haircuts/index.html \
+                   black-hair-kapper-almere/index.html kinderkapper-almere/index.html \
+                   contact/index.html algemene-voorwaarden/index.html 404.html \
+                   sitemap.xml robots.txt llms.txt; do
+            test -s "dist/$f" || { echo "::error::ontbreekt in de build: $f"; exit 1; }
+          done
+          if grep -rl '<!--app-' dist --include='*.html'; then
+            echo "::error::niet ingevulde plekken in de HTML"; exit 1
+          fi
+          grep -q '"@type":"HairSalon"' dist/index.html
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+
+      - name: Toegang tot de server
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          LOGIN: ${{ secrets.DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          if [ -z "$KEY" ] || [ -z "$KNOWN" ] || [ -z "$HOST" ] || [ -z "$LOGIN" ]; then
+            echo "::error::Secrets ontbreken (DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS). De build staat als artefact klaar."
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+          printf 'Host prod\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_deploy\n  StrictHostKeyChecking yes\n  BatchMode yes\n' "$HOST" "$LOGIN" > ~/.ssh/config
+          ssh prod "test -d '$DEPLOY_PATH'" || { echo "::error::$DEPLOY_PATH bestaat niet op de server"; exit 1; }
+
+      - name: Uploaden naast de huidige versie
+        run: rsync -az --delete dist/ "prod:$DEPLOY_PATH/dist-nieuw/"
+
+      - name: Omwisselen
+        id: wissel
+        run: |
+          ssh prod "set -e; cd '$DEPLOY_PATH'; rm -rf dist-vorige; if [ -d dist ]; then mv dist dist-vorige; fi; mv dist-nieuw dist"
+
+      # Bewijst dat de server de nieuwe build serveert: het script-bestand met
+      # de hash van deze build moet in de live HTML staan en bereikbaar zijn.
+      - name: Rookproef
+        id: rookproef
+        run: |
+          set -euo pipefail
+          sleep 3
+          script=$(grep -o '/assets/index-[A-Za-z0-9_-]*\.js' dist/index.html | head -1)
+          home=$(curl -fsS "$SITE/")
+          grep -qF "$script" <<<"$home" || { echo "::error::live HTML noemt $script niet; de server serveert een andere map"; exit 1; }
+          grep -qF 'Herenkapper &amp; barber in Almere' <<<"$home"
+          curl -fsS -o /dev/null "$SITE$script"
+          curl -fsS "$SITE/behandelingen-en-prijzen/" | grep -qF '€ 32'
+          test "$(curl -fsS "$SITE/sitemap.xml" | grep -c '<loc>')" -ge 7
+          curl -fsS -o /dev/null "$SITE/img/logo-336.webp"
+          echo "Live: $script"
+
+      - name: Vorige versie terugzetten
+        if: failure() && steps.wissel.outcome == 'success'
+        run: |
+          ssh prod "set -e; cd '$DEPLOY_PATH'; if [ -d dist-vorige ]; then rm -rf dist-mislukt; mv dist dist-mislukt; mv dist-vorige dist; fi"
+          echo "::warning::De vorige versie staat weer live; de mislukte build staat op de server in dist-mislukt."
