@@ -80,8 +80,18 @@ Terug naar de vorige versie:
    `/en/`) sturen door.
 3. Daarna de server goed zetten met `deploy/nginx/barberiwan.nl.conf`:
    echte 404, 301's voor oude adressen, www naar zonder www, gzip, cache, HSTS en
-   een CSP. Vergelijk eerst met `sudo nginx -T`, laat de certificaatregels staan,
-   en herlaad pas na `sudo nginx -t`.
+   een CSP. `deploy/nginx/zet-live.sh` doet dat in één keer: het neemt de
+   certificaatregels van certbot over, bewaart het oude bestand in
+   `/root/nginx-reserve/`, draait `nginx -t`, herlaadt, doet een rookproef tegen
+   de server zelf en zet bij een fout het oude bestand terug. Het stopt zonder
+   iets te wijzigen als het nginx-bestand ook andere sites bedient of niet naar
+   `/var/www/html/site-v3/dist` wijst. Als root op de server:
+
+   ```bash
+   rm -rf /tmp/site-v3-nginx
+   git clone -q --depth 1 https://github.com/BarberIwan/site-v3 /tmp/site-v3-nginx
+   bash /tmp/site-v3-nginx/deploy/nginx/zet-live.sh
+   ```
 4. pm2 (`ecosystem.config.cjs`) is alleen nodig als nginx naar poort 3000
    doorstuurt. `serve` leest dan `dist/serve.json`.
 
