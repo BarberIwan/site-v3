@@ -24,6 +24,8 @@ export const business = {
     postalCode: '1328 VX',
     city: 'Almere',
     district: 'Tussen de Vaarten',
+    // Zo zoeken mensen: "kapper almere stad" is de grootste verwante zoekterm (Google Trends, 2026).
+    area: 'Almere Stad',
     region: 'Flevoland',
     country: 'NL',
   },
@@ -258,60 +260,94 @@ export const faqs: Record<string, Faq> = {
     q: 'Vanaf welke leeftijd knip je kinderen?',
     a: `Vanaf 1 jaar. Voor de kleintjes tot en met 4 jaar is er een eenvoudige, rustige knipbeurt van €${serviceById('kids-1-4').price}; van 5 tot en met 12 jaar een verzorgd jongenskapsel van €${serviceById('kids-5-12').price}.`,
   },
+  fadeVerschil: {
+    q: 'Wat is het verschil tussen een fade en een taper?',
+    a: 'Bij een fade loopt het haar aan de zijkant en in de nek geleidelijk af tot heel kort, soms tot op de huid (skin fade). Een taper is subtieler: alleen de randen bij de bakkebaarden en in de nek worden korter, de rest blijft langer.',
+  },
+  fadeSoort: {
+    q: 'Welke fade past bij mij?',
+    a: 'Dat hangt af van je haartype, je hoofdvorm en hoe kort je het wilt. Een low fade is subtiel, een mid fade de veelzijdige middenweg en een high of skin fade geeft het meeste contrast. In de stoel kijken we samen wat bij je past.',
+  },
+  fadeOnderhoud: {
+    q: 'Hoe vaak moet ik mijn fade laten bijwerken?',
+    a: 'Een fade groeit snel uit. Wil je hem strak houden, dan is elke twee tot drie weken een gangbaar ritme; een taper kan meestal wat langer.',
+  },
+  baardVaak: {
+    q: 'Hoe vaak moet ik mijn baard laten trimmen?',
+    a: 'Voor strakke lijnen en een nette vorm is elke twee tot vier weken een goed ritme, afhankelijk van hoe snel je baard groeit en hoe kort je hem draagt.',
+  },
+  baardCombi: {
+    q: 'Kan ik knippen en baard in één afspraak doen?',
+    a: `Ja, kies in de agenda voor knippen + baard (€${serviceById('knippen-baard').price}). Dan staat alles in één afspraak.`,
+  },
   kinderSamen: {
     q: 'Kunnen broertjes of vader en zoon samen komen?',
     a: 'Zeker. Boek in de agenda voor ieder een eigen afspraak, aansluitend na elkaar.',
   },
 };
 
+export type PhotoTag = 'fades' | 'krullen' | 'baard' | 'kinderen' | 'klassiek' | 'lijnen';
+
+export const photoTags: { id: PhotoTag; label: string }[] = [
+  { id: 'fades', label: 'Fades' },
+  { id: 'krullen', label: 'Krullen & afro' },
+  { id: 'lijnen', label: 'Lijnen & figuren' },
+  { id: 'baard', label: 'Baard' },
+  { id: 'klassiek', label: 'Klassiek' },
+  { id: 'kinderen', label: 'Kinderen' },
+];
+
 export interface Photo {
-  file: string;
+  // Beschrijvende bestandsnaam: /foto/<slug>.jpg en /img/<slug>-<breedte>.webp
+  slug: string;
   width: number;
   height: number;
   webp: number[];
   title: string;
   caption: string;
   alt: string;
+  tags: PhotoTag[];
 }
 
 const photo = (
-  file: string,
+  slug: string,
   width: number,
   height: number,
   webp: number[],
   title: string,
   caption: string,
   alt: string,
-): Photo => ({ file, width, height, webp, title, caption, alt });
+  tags: PhotoTag[],
+): Photo => ({ slug, width, height, webp, title, caption, alt, tags });
 
-export const photoSrc = (p: Photo) => `/${p.file}`;
-export const photoWebp = (p: Photo, w: number) => `/img/${p.file.replace(/\.[a-z]+$/, '')}-${w}.webp`;
+export const photoSrc = (p: Photo) => `/foto/${p.slug}.jpg`;
+export const photoWebp = (p: Photo, w: number) => `/img/${p.slug}-${w}.webp`;
 
-export const work: Photo[] = [
-  photo('7BA86E7C-5624-4FB8-B92B-ED7F1729ACC7.jpg', 900, 1200, [480, 900], 'Krullen met mid fade', 'Krullend bovenhaar, een mid fade en een volle, strak getrimde baard.', 'Man met krullend bovenhaar, mid fade en volle getrimde baard, van opzij'),
-  photo('7367F35C-CC28-43C5-A6F7-E786E6FD6D31.jpg', 900, 1200, [480, 900], 'Contouren bij vlechten', 'Strak bijgewerkte zijkanten en lijnen rond cornrows.', 'Jongeman met cornrows en strak bijgewerkte contouren, van opzij'),
-  photo('ECE8A51A-C1C4-4D31-9604-795D3E8BC503.jpg', 900, 1200, [480, 900], 'Klassieke taper', 'Donker, steil haar met een nette taper in de nek.', 'Klassiek herenkapsel met taper in de nek, van achteren'),
-  photo('C61F0EF9-D76E-4DD4-AA20-F9F5ADF5E800.jpg', 900, 1200, [480, 900], 'Buzzcut met fade', 'Kort geknipt, met een strakke overgang en contour rond het oor.', 'Korte buzzcut met fade en strakke contour rond het oor'),
-  photo('CF0D0669-07E7-485C-8260-C9BED93B82F8.jpg', 900, 1200, [480, 900], 'Korte crop met fade', 'Kort, getextureerd bovenhaar met een fade.', 'Korte crop met fade bij een jongeman, van opzij'),
-  photo('2D8D9132-0A24-4FA7-B8A7-3D3A91395F3F.jpg', 1024, 1536, [480, 1024], 'Lange pony met low taper', 'Steil haar met een lange pony en een lage taper.', 'Steil donker haar met lange pony en low taper, van opzij'),
-  photo('9AA8A269-A960-4E8A-B7B7-22A7C1038927.jpg', 900, 1200, [480, 900], 'Kaal met baard', 'Glad hoofd en een verzorgde, grijze baard.', 'Kaal geschoren hoofd met verzorgde grijze baard'),
-];
-
-export const instagram: Photo[] = [
-  photo('ig-3.jpg', 900, 1200, [400, 900], 'Afro top met taper', 'Krullend haar bovenop, taper fade en baard.', 'Krullend afrohaar bovenop met taper fade en baard'),
-  photo('ig-2.jpg', 900, 1200, [400, 900], 'Textured top met fade', 'Getextureerd bovenhaar met een fade.', 'Jongen met getextureerd bovenhaar en fade'),
-  photo('ig-4.jpg', 900, 1200, [400, 900], 'Lang haar met fade', 'Lang, naar achteren gekamd haar met fade opzij en een strakke baard.', 'Lang naar achteren gekamd haar met fade opzij en strakke baard'),
-  photo('ig-5.jpg', 900, 1200, [400, 900], 'Kort opzij, volle baard', 'Kort aan de zijkant, langer bovenop, met een volle baard.', 'Kort opzij en langer bovenop, met volle baard'),
-  photo('ig-6.jpg', 1026, 1200, [400, 1026], 'Golvend met low taper', 'Golvend bovenhaar met een low taper fade.', 'Golvend bovenhaar met low taper fade'),
-  photo('ig-1.jpg', 900, 1200, [400, 900], 'Recht afgeknipt', 'Kort, recht afgeknipt kapsel.', 'Kort, recht afgeknipt kapsel, van achteren'),
-];
-
-export const extra = {
-  kid: photo('carousel-1.jpg', 488, 448, [488], 'Kinderkapsel met fade', 'Kort kinderkapsel met een fade.', 'Jongen met kort kapsel en fade, van opzij'),
-  design: photo('carousel-2.jpg', 488, 448, [488], 'Figuur geschoren', 'Kort, natuurlijk krullend haar met een geschoren figuur.', 'Kort natuurlijk krullend haar met een geschoren figuur aan de zijkant'),
-  afro: photo('carousel-3.jpg', 488, 448, [488], 'Afro met taper fade', 'Volumineus krullend haar met een taper fade.', 'Volumineus krullend haar met taper fade en baard'),
-  hero: photo('hero-barber.jpg', 864, 1184, [600, 864], '', '', ''),
-  tools: photo('tools-flatlay.jpg', 1344, 768, [720, 1344], 'Gereedschap', '', 'Barbergereedschap: kam, scheermes, gouden schaar en een flesje op een donkere ondergrond'),
+const P = {
+  iwan: photo('iwan-barber-almere', 1125, 1688, [480, 900], 'Iwan in de salon', 'Iwan naast de kappersstoel in zijn salon aan de Michelangelostraat.', 'Barber Iwan in leren schort naast de kappersstoel in zijn salon in Almere', []),
+  midFade: photo('mid-fade-krullen-baard', 900, 1200, [480, 900], 'Krullen met mid fade', 'Krullend bovenhaar, een mid fade en een volle, strak getrimde baard.', 'Man met krullend bovenhaar, mid fade en volle getrimde baard, van opzij', ['fades', 'krullen', 'baard']),
+  cornrows: photo('contouren-cornrows', 900, 1200, [480, 900], 'Contouren bij vlechten', 'Strak bijgewerkte zijkanten en lijnen rond cornrows.', 'Jongeman met cornrows en strak bijgewerkte contouren, van opzij', ['lijnen']),
+  taper: photo('klassieke-taper', 900, 1200, [480, 900], 'Klassieke taper', 'Donker, steil haar met een nette taper in de nek.', 'Klassiek herenkapsel met taper in de nek, van achteren', ['klassiek', 'fades']),
+  buzz: photo('buzzcut-fade', 900, 1200, [480, 900], 'Buzzcut met fade', 'Kort geknipt, met een strakke overgang en contour rond het oor.', 'Korte buzzcut met fade en strakke contour rond het oor', ['fades', 'lijnen']),
+  crop: photo('korte-crop-fade', 900, 1200, [480, 900], 'Korte crop met fade', 'Kort, getextureerd bovenhaar met een fade.', 'Korte crop met fade bij een jongeman, van opzij', ['fades']),
+  pony: photo('lange-pony-low-taper', 1024, 1536, [480, 1024], 'Lange pony met low taper', 'Steil haar met een lange pony en een lage taper.', 'Steil donker haar met lange pony en low taper, van opzij', ['fades', 'klassiek']),
+  bald: photo('kaal-geschoren-baard', 900, 1200, [480, 900], 'Kaal met baard', 'Glad hoofd en een verzorgde, grijze baard.', 'Kaal geschoren hoofd met verzorgde grijze baard', ['baard']),
+  afroTop: photo('afro-top-taper-fade', 900, 1200, [400, 900], 'Afro top met taper', 'Krullend haar bovenop, taper fade en baard.', 'Krullend afrohaar bovenop met taper fade en baard', ['krullen', 'fades', 'baard']),
+  textured: photo('textured-top-fade', 900, 1200, [400, 900], 'Textured top met fade', 'Getextureerd bovenhaar met een fade.', 'Jongen met getextureerd bovenhaar en fade', ['fades', 'kinderen']),
+  longHair: photo('lang-haar-fade-baard', 900, 1200, [400, 900], 'Lang haar met fade', 'Lang, naar achteren gekamd haar met fade opzij en een strakke baard.', 'Lang naar achteren gekamd haar met fade opzij en strakke baard', ['fades', 'baard']),
+  fullBeard: photo('kort-opzij-volle-baard', 900, 1200, [400, 900], 'Kort opzij, volle baard', 'Kort aan de zijkant, langer bovenop, met een volle baard.', 'Kort opzij en langer bovenop, met volle baard', ['baard', 'klassiek']),
+  wavy: photo('golvend-low-taper', 1026, 1200, [400, 1026], 'Golvend met low taper', 'Golvend bovenhaar met een low taper fade.', 'Golvend bovenhaar met low taper fade', ['fades', 'krullen']),
+  straight: photo('recht-afgeknipt', 900, 1200, [400, 900], 'Recht afgeknipt', 'Kort, recht afgeknipt kapsel.', 'Kort, recht afgeknipt kapsel, van achteren', ['klassiek']),
+  kid: photo('kinderkapsel-fade', 488, 448, [488], 'Kinderkapsel met fade', 'Kort kinderkapsel met een fade.', 'Jongen met kort kapsel en fade, van opzij', ['kinderen', 'fades']),
+  design: photo('geschoren-figuur-krullen', 488, 448, [488], 'Figuur geschoren', 'Kort, natuurlijk krullend haar met een geschoren figuur.', 'Kort natuurlijk krullend haar met een geschoren figuur aan de zijkant', ['krullen', 'lijnen']),
+  afro: photo('afro-taper-fade', 488, 448, [488], 'Afro met taper fade', 'Volumineus krullend haar met een taper fade.', 'Volumineus krullend haar met taper fade en baard', ['krullen', 'fades']),
 };
 
-export const allWork: Photo[] = [...work, ...instagram, extra.afro, extra.design, extra.kid];
+export const photos = P;
+
+export const allWork: Photo[] = [
+  P.midFade, P.afroTop, P.cornrows, P.taper, P.wavy, P.buzz, P.design, P.longHair,
+  P.crop, P.fullBeard, P.afro, P.pony, P.textured, P.bald, P.kid, P.straight,
+];
+
+export const photosTagged = (tag: PhotoTag) => allWork.filter((p) => p.tags.includes(tag));

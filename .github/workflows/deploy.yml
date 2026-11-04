@@ -110,6 +110,11 @@ jobs:
           curl -fsS -o /dev/null "$SITE/img/logo-336.webp"
           echo "Live: $script"
 
+      # Bing en de andere IndexNow-zoekmachines meteen laten weten wat er nieuw is.
+      - name: Zoekmachines inlichten (IndexNow)
+        continue-on-error: true
+        run: node scripts/indexnow.mjs
+
       - name: Vorige versie terugzetten
         if: failure() && steps.wissel.outcome == 'success'
         run: |

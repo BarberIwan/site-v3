@@ -1,9 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  // Alleen wat de site en het beheer echt gebruiken; de ongebruikte shadcn-set in
+  // src/components/ui hoort niet in de CSS van bezoekers.
+  content: ['./index.html', './src/site/**/*.{ts,tsx}', './src/admin/**/*.{ts,tsx}', './src/entry-*.tsx'],
   theme: {
     extend: {
+      fontFamily: {
+        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        sans: ['Montserrat', 'system-ui', 'sans-serif'],
+      },
       colors: {
         // De huisstijlkleur; zonder deze regel deden klassen als border-gold/30 en fill-gold niets.
         gold: "hsl(var(--gold) / <alpha-value>)",

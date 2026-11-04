@@ -1,191 +1,313 @@
 import type { ReactNode } from 'react';
-import { ArrowRight, Calendar, Clock, HelpCircle, MapPin, MessageCircle, Navigation, Phone, Star } from 'lucide-react';
+import { ArrowRight, Calendar, MapPin, MessageCircle, Phone, Star } from 'lucide-react';
 import {
   business,
   formatPrice,
+  openingForJsDay,
   openingHours,
+  openingSummary,
+  photos,
   PRICES_CHECKED,
   reviewSummary,
   reviews,
   serviceGroups,
   servicesIn,
+  type Photo,
   type Review,
   type ServiceGroup,
 } from './data';
-import { pages, type PageMeta } from './pages';
+import { pages, type PageId, type PageMeta } from './pages';
 import { faqsFor } from './pageFaqs';
-import { FaqList, MagneticLink, SectionLabel, Spotlight, TiltCard } from './ui';
+import { ArrowLink, Eyebrow, FaqList, Picture } from './ui';
+import { useNow } from './useNow';
 
-// Kop van een subpagina: kruimelpad, label, H1 en intro.
+const fullDays = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
+
+// Kop van een subpagina: kruimelpad, label, H1, intro en eventueel een foto.
 export function PageHeader({
   page,
   eyebrow,
   title,
   intro,
+  photo,
 }: {
   page: PageMeta;
   eyebrow: string;
   title: ReactNode;
   intro: ReactNode;
+  photo?: Photo;
 }) {
   return (
-    <section className="pt-40 pb-16 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(201,168,74,0.08)_0%,_transparent_60%)]" />
-      <div className="relative max-w-5xl mx-auto px-8">
-        <nav aria-label="Kruimelpad" className="mb-10">
-          <ol className="flex flex-wrap items-center gap-2 text-xs tracking-widest uppercase text-white/40 font-sans">
-            <li>
-              <a href="/" className="hover:text-gold transition-colors">
-                Home
-              </a>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li aria-current="page" className="text-white/70">
-              {page.label}
-            </li>
-          </ol>
-        </nav>
-        <SectionLabel>{eyebrow}</SectionLabel>
-        <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-8">{title}</h1>
-        <div className="text-white/60 text-lg leading-relaxed max-w-2xl font-light space-y-4">{intro}</div>
+    <section className="relative pt-36 md:pt-44 pb-20 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(201,168,74,0.07)_0%,_transparent_55%)]" />
+      <div className={`relative max-w-7xl mx-auto px-6 md:px-8 grid gap-14 ${photo ? 'lg:grid-cols-[1.25fr_1fr] items-end' : ''}`}>
+        <div className="max-w-3xl">
+          <nav aria-label="Kruimelpad" className="mb-12 rise">
+            <ol className="flex flex-wrap items-center gap-2 text-[11px] tracking-[0.22em] uppercase text-white/40">
+              <li>
+                <a href="/" className="hover:text-gold transition-colors">
+                  Home
+                </a>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li aria-current="page" className="text-white/70">
+                {page.label}
+              </li>
+            </ol>
+          </nav>
+          <div className="rise" style={{ '--d': '60ms' } as React.CSSProperties}>
+            <Eyebrow>{eyebrow}</Eyebrow>
+          </div>
+          <h1 className="font-serif text-[2.75rem] leading-[1.02] sm:text-6xl lg:text-7xl mb-8 rise" style={{ '--d': '120ms' } as React.CSSProperties}>
+            {title}
+          </h1>
+          <div className="text-white/60 text-lg leading-relaxed max-w-2xl space-y-4 rise" style={{ '--d': '180ms' } as React.CSSProperties}>
+            {intro}
+          </div>
+        </div>
+        {photo && (
+          <div className="relative aspect-[4/5] max-h-[560px] w-full max-w-md lg:ml-auto overflow-hidden">
+            <Picture photo={photo} sizes="(min-width: 1024px) 440px, 90vw" priority />
+            <span className="unveil" style={{ '--d': '150ms' } as React.CSSProperties} aria-hidden="true" />
+          </div>
+        )}
       </div>
     </section>
+  );
+}
+
+// Kop boven een sectie: nummer, label en titel.
+export function SectionTitle({
+  number,
+  eyebrow,
+  children,
+  center = false,
+  aside,
+}: {
+  number?: string;
+  eyebrow: string;
+  children: ReactNode;
+  center?: boolean;
+  aside?: ReactNode;
+}) {
+  return (
+    <div className={`mb-14 md:mb-20 flex flex-col gap-6 ${center ? 'items-center text-center' : 'md:flex-row md:items-end md:justify-between'}`} data-reveal>
+      <div>
+        <Eyebrow number={number}>{eyebrow}</Eyebrow>
+        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] max-w-3xl">{children}</h2>
+      </div>
+      {aside}
+    </div>
   );
 }
 
 export function BookButton({ children = 'Afspraak maken', href = '/#afspraak' }: { children?: ReactNode; href?: string }) {
   return (
-    <MagneticLink
-      href={href}
-      className="inline-flex items-center btn-cta btn-cta-ring animate-cta-pulse text-black font-sans text-sm tracking-[0.2em] uppercase px-12 py-6 rounded-sm"
-    >
-      <Calendar className="w-5 h-5 mr-3" aria-hidden="true" />
+    <a href={href} className="btn btn-primary">
+      <Calendar className="w-4 h-4" aria-hidden="true" />
       {children}
-    </MagneticLink>
+    </a>
   );
 }
 
-// De online agenda van Salonized. Staat op home en op de prijzenpagina.
-export function BookingSection({ intro }: { intro?: string }) {
+export function TrustStrip() {
   return (
-    <section id="afspraak" className="py-32 relative overflow-hidden scroll-mt-24">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#080808] to-[#0a0a0a]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(201,168,74,0.05)_0%,_transparent_60%)]" />
+    <ul className="flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-white/55">
+      <li className="flex items-center gap-2">
+        <span className="flex text-gold" aria-hidden="true">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Star key={i} className="w-3.5 h-3.5 fill-gold" />
+          ))}
+        </span>
+        <span>
+          <strong className="text-white font-normal">{reviewSummary.rating}</strong> uit {reviewSummary.count} reviews op {reviewSummary.source}
+        </span>
+      </li>
+      <li>
+        Sinds <strong className="text-white font-normal">{business.since}</strong> aan de schaar
+      </li>
+      <li>
+        {business.address.district}, {business.address.area}
+      </li>
+    </ul>
+  );
+}
 
-      <div className="relative max-w-6xl mx-auto px-8">
-        <div className="text-center mb-16">
-          <SectionLabel center>Online agenda</SectionLabel>
-          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl mb-4">
-            Boek je <span className="italic text-gold">afspraak</span>
+// Vandaag open of dicht. Vooraf gerenderd staat er de vaste tekst; in de
+// browser komt de dagstatus erbij.
+function TodayStatus() {
+  const now = useNow();
+  if (!now) return <p className="text-white/60 text-sm">{openingSummary}, op afspraak.</p>;
+  const today = openingForJsDay(now.getDay());
+  const hour = now.getHours();
+  const openNow = Boolean(today.opens) && hour >= 9 && hour < 17;
+  const tomorrow = openingForJsDay((now.getDay() + 1) % 7);
+  return (
+    <p className="flex items-center gap-3 text-sm text-white/70">
+      <span className={`w-2 h-2 rounded-full ${openNow ? 'bg-emerald-400' : 'bg-white/30'}`} aria-hidden="true" />
+      {openNow
+        ? `Nu open, tot ${today.closes}`
+        : today.opens && hour < 9
+          ? `Vandaag open vanaf ${today.opens}`
+          : tomorrow.opens
+            ? `Nu gesloten · morgen (${fullDays[(now.getDay() + 1) % 7]}) open vanaf ${tomorrow.opens}`
+            : 'Nu gesloten · online boeken kan altijd'}
+    </p>
+  );
+}
+
+// De online agenda van Salonized, met de belangrijkste info ernaast.
+export function BookingSection({ number }: { number?: string }) {
+  return (
+    <section id="afspraak" className="py-28 md:py-36 relative scroll-mt-20 bg-[#0a0a09]">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 grid gap-14 lg:grid-cols-[1fr_1.6fr]">
+        <div data-reveal>
+          <Eyebrow number={number}>Online agenda</Eyebrow>
+          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] mb-8">
+            Plan je <em className="text-gold">afspraak</em>
           </h2>
-          <p className="text-white/60 max-w-xl mx-auto">
-            {intro ?? 'Kies je behandeling en een tijd die je uitkomt. Je krijgt direct een bevestiging.'}
+          <p className="text-white/60 leading-relaxed mb-10 max-w-sm">
+            Kies je behandeling en een tijd die je uitkomt; je krijgt direct een bevestiging. Online boeken kan dag en nacht.
           </p>
-        </div>
-
-        <div className="booking-frame relative">
-          <div className="relative border border-white/10 bg-[#0d0d0d]">
-            <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-gold/50 -mt-px -ml-px animate-pulse" style={{ animationDuration: '3s' }} />
-            <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-gold/50 -mt-px -mr-px animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s' }} />
-            <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-gold/50 -mb-px -ml-px animate-pulse" style={{ animationDuration: '3s', animationDelay: '1s' }} />
-            <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-gold/50 -mb-px -mr-px animate-pulse" style={{ animationDuration: '3s', animationDelay: '1.5s' }} />
-            <div className="p-2 md:p-4">
-              <iframe
-                src={business.booking}
-                width="100%"
-                height="700"
-                style={{ border: 'none', background: 'transparent' }}
-                title="Online agenda van Barber Iwan"
-                loading="lazy"
-              />
+          <div className="space-y-6 border-t border-white/10 pt-8">
+            <TodayStatus />
+            <div className="flex flex-col gap-3 text-sm">
+              <a href={business.phone.href} className="inline-flex items-center gap-3 text-white/80 hover:text-gold transition-colors">
+                <Phone className="w-4 h-4 text-gold" aria-hidden="true" />
+                {business.phone.display}
+              </a>
+              <a href={business.phone.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 text-white/80 hover:text-gold transition-colors">
+                <MessageCircle className="w-4 h-4 text-gold" aria-hidden="true" />
+                Stuur een appje
+              </a>
             </div>
+            <ArrowLink href={pages.prijzen.path}>Bekijk alle prijzen</ArrowLink>
           </div>
-          <p className="text-center text-white/40 text-xs mt-4">
+        </div>
+        <div data-reveal style={{ '--d': '100ms' } as React.CSSProperties}>
+          <div className="border border-white/10 bg-[#0d0d0c] p-2 md:p-3">
+            <iframe
+              src={business.booking}
+              width="100%"
+              height="720"
+              style={{ border: 'none', background: 'transparent' }}
+              title="Online agenda van Barber Iwan"
+              loading="lazy"
+            />
+          </div>
+          <p className="text-white/40 text-xs mt-4">
             Laadt de agenda niet?{' '}
             <a href={business.booking} target="_blank" rel="noopener noreferrer" className="text-gold underline underline-offset-4">
-              Open de agenda in een nieuw venster
+              Open hem in een nieuw venster
             </a>
             .
           </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 mt-16">
-          {[
-            { icon: Calendar, title: 'Direct bevestigd', desc: 'Je ziet meteen welke tijden vrij zijn.' },
-            { icon: Clock, title: 'Dag en nacht boeken', desc: 'Online boeken kan altijd, ook buiten openingstijden.' },
-            { icon: Phone, title: 'Liever bellen?', desc: business.phone.display, href: business.phone.href },
-          ].map((item) => (
-            <TiltCard key={item.title} className="text-center p-6 border border-white/10 hover:border-gold/30 transition-colors group">
-              <div className="text-gold text-3xl mb-3 group-hover:scale-110 transition-transform">
-                <item.icon className="w-8 h-8 mx-auto" aria-hidden="true" />
-              </div>
-              <h3 className="font-serif text-xl mb-2">{item.title}</h3>
-              {item.href ? (
-                <a href={item.href} className="text-white/60 text-sm hover:text-gold transition-colors">
-                  {item.desc}
-                </a>
-              ) : (
-                <p className="text-white/60 text-sm">{item.desc}</p>
-              )}
-            </TiltCard>
-          ))}
         </div>
       </div>
     </section>
   );
 }
 
-export function PriceList({ groups }: { groups: ServiceGroup[] }) {
+// Prijslijst als menukaart.
+export function PriceMenu({ groups, compact = false }: { groups: ServiceGroup[]; compact?: boolean }) {
   return (
-    <div className="space-y-16">
+    <div className={`grid gap-x-16 gap-y-14 ${compact ? 'md:grid-cols-2' : ''}`}>
       {serviceGroups
         .filter((g) => groups.includes(g.id))
         .map((group) => (
-          <div key={group.id}>
-            <h2 className="font-serif text-3xl md:text-4xl mb-2">{group.title}</h2>
-            <p className="text-white/50 text-sm mb-6">{group.intro}</p>
-            <ul className="border-t border-white/10">
+          <div key={group.id} data-reveal>
+            <h3 className="font-serif text-3xl md:text-4xl mb-2">{group.title}</h3>
+            <p className="text-white/45 text-sm mb-8">{group.intro}</p>
+            <ul className="space-y-7">
               {servicesIn(group.id).map((s) => (
-                <li key={s.id} className="flex items-start justify-between gap-6 py-5 border-b border-white/10">
-                  <div>
-                    <h3 className="font-sans text-base tracking-wide text-white">{s.name}</h3>
-                    <p className="text-white/50 text-sm mt-1">{s.description}</p>
+                <li key={s.id}>
+                  <div className="menu-row">
+                    <span className="font-serif text-xl md:text-2xl text-white">{s.name}</span>
+                    <span className="dots" aria-hidden="true" />
+                    <span className="font-serif text-xl md:text-2xl text-gold tabular-nums">{formatPrice(s.price)}</span>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-serif text-3xl text-gold leading-none">{formatPrice(s.price)}</p>
-                    <p className="text-white/40 text-xs mt-2">{s.minutes} min</p>
-                  </div>
+                  {!compact && (
+                    <p className="text-white/50 text-sm mt-1.5">
+                      {s.description} <span className="text-white/30">· {s.minutes} min</span>
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
           </div>
         ))}
-      <p className="text-white/40 text-xs">
-        Prijzen zoals in de online agenda ({PRICES_CHECKED}). Betalen kan met pin, contant of Tikkie.
-      </p>
     </div>
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+export function PricesNote() {
   return (
-    <figure className="border border-white/10 bg-[#080808] p-6 hover:border-gold/30 transition-all flex flex-col">
-      <div className="flex gap-1 mb-4" role="img" aria-label="5 van de 5 sterren">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Star key={i} className="w-4 h-4 text-gold fill-gold" aria-hidden="true" />
-        ))}
-      </div>
-      <blockquote className="text-white/70 text-sm leading-relaxed mb-6 font-sans italic flex-1">
+    <p className="text-white/35 text-xs mt-12">
+      Prijzen zoals in de online agenda ({PRICES_CHECKED}). Betalen kan met pin, contant of Tikkie.
+    </p>
+  );
+}
+
+const specialtyPhotos: Partial<Record<PageId, Photo>> = {
+  fade: photos.buzz,
+  'black-hair': photos.afroTop,
+  baard: photos.fullBeard,
+  kinderen: photos.kid,
+};
+
+const specialtyText: Partial<Record<PageId, string>> = {
+  fade: 'Low, mid, high of skin: een vloeiende overgang en scherpe lijnen.',
+  'black-hair': 'Afro, kroes en krullen, met fades, line-ups en geschoren figuren.',
+  baard: 'Trimmen, shapen en strakke contouren, los of samen met je knipbeurt.',
+  kinderen: 'Een rustige, nette knipbeurt voor jongens van 1 tot en met 12 jaar.',
+};
+
+export function SpecialtyCards({ ids, exclude }: { ids: PageId[]; exclude?: PageId }) {
+  const list = ids.filter((id) => id !== exclude);
+  return (
+    <ul className={`grid gap-x-4 gap-y-10 sm:gap-6 grid-cols-2 ${list.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+      {list.map((id, i) => {
+        const photo = specialtyPhotos[id]!;
+        return (
+          <li key={id} data-reveal style={{ '--d': `${i * 70}ms` } as React.CSSProperties}>
+            <a href={pages[id].path} className="group block">
+              <div className="img-hover relative aspect-[4/5] border border-white/10 bg-[#0d0d0c]">
+                <Picture photo={photo} sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <span className="absolute left-4 bottom-4 right-4 sm:left-5 sm:bottom-5 font-serif text-2xl sm:text-3xl leading-tight">{pages[id].label}</span>
+              </div>
+              <p className="text-white/50 text-[13px] sm:text-sm leading-relaxed mt-4">{specialtyText[id]}</p>
+              <span className="link-arrow mt-4">
+                Meer weten
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function Stars({ size = 'w-4 h-4' }: { size?: string }) {
+  return (
+    <span className="flex gap-0.5 text-gold" role="img" aria-label="5 van de 5 sterren">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} className={`${size} fill-gold`} aria-hidden="true" />
+      ))}
+    </span>
+  );
+}
+
+function ReviewCard({ review, featured = false }: { review: Review; featured?: boolean }) {
+  return (
+    <figure className={`flex flex-col h-full ${featured ? '' : 'border-t border-white/10 pt-8'}`}>
+      <Stars size={featured ? 'w-5 h-5' : 'w-3.5 h-3.5'} />
+      <blockquote className={`mt-6 flex-1 font-serif ${featured ? 'text-3xl md:text-4xl leading-snug' : 'text-xl leading-relaxed text-white/85'}`}>
         <p>“{review.text}”</p>
       </blockquote>
-      <figcaption className="flex items-center gap-3 pt-4 border-t border-white/10">
-        <span className="w-10 h-10 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center" aria-hidden="true">
-          <span className="text-gold font-serif text-lg">{review.name.charAt(0)}</span>
-        </span>
-        <span>
-          <span className="block text-white font-sans text-sm">{review.name}</span>
-          <span className="block text-white/40 text-xs font-sans">Geverifieerde review op {reviewSummary.source}</span>
-        </span>
+      <figcaption className="mt-6 text-sm text-white/45">
+        <span className="text-white/80">{review.name}</span> · geverifieerde review op {reviewSummary.source}
       </figcaption>
     </figure>
   );
@@ -193,104 +315,82 @@ function ReviewCard({ review }: { review: Review }) {
 
 // Echte, geverifieerde reviews met bron. Geen sterren-markup in schema.org:
 // Google accepteert geen reviews van een andere site als eigen beoordeling.
-export function ReviewsSection({ topic, title }: { topic?: Review['topic']; title?: ReactNode }) {
+export function ReviewsSection({ topic, title, number }: { topic?: Review['topic']; title?: ReactNode; number?: string }) {
   const list = topic ? reviews.filter((r) => r.topic === topic) : reviews;
+  const [featured, ...rest] = list;
   return (
-    <section id="reviews" className="py-32 relative overflow-hidden scroll-mt-24">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(201,168,74,0.06)_0%,_transparent_60%)]" />
-      <div className="relative max-w-7xl mx-auto px-8">
-        <div className="text-center mb-16">
-          <SectionLabel center>Reviews</SectionLabel>
-          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl mb-4">
-            {title ?? (
-              <>
-                Wat <span className="italic text-gold">klanten</span> zeggen
-              </>
-            )}
-          </h2>
-          <p className="flex items-center justify-center gap-3 text-white/60 font-sans text-sm">
-            <span className="flex" aria-hidden="true">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className="w-5 h-5 text-gold fill-gold" />
-              ))}
-            </span>
-            <span>
-              {reviewSummary.rating} uit 5 op {reviewSummary.source} · {reviewSummary.count} geverifieerde reviews (
-              {reviewSummary.checked})
-            </span>
-          </p>
+    <section id="reviews" className="py-28 md:py-36 scroll-mt-20">
+      <div className="max-w-7xl mx-auto px-6 md:px-8">
+        <SectionTitle
+          number={number}
+          eyebrow="Reviews"
+          aside={
+            <p className="text-white/55 text-sm md:text-right">
+              <span className="font-serif text-5xl text-white block leading-none mb-2">{reviewSummary.rating}</span>
+              uit {reviewSummary.count} geverifieerde reviews op {reviewSummary.source} ({reviewSummary.checked})
+            </p>
+          }
+        >
+          {title ?? (
+            <>
+              Wat klanten <em className="text-gold">zeggen</em>
+            </>
+          )}
+        </SectionTitle>
+
+        <div className="grid gap-14 lg:grid-cols-[1.2fr_1fr]">
+          <div data-reveal>
+            <ReviewCard review={featured} featured />
+          </div>
+          <div className="grid gap-10 sm:grid-cols-2">
+            {rest.map((review, i) => (
+              <div key={review.name} data-reveal style={{ '--d': `${i * 60}ms` } as React.CSSProperties}>
+                <ReviewCard review={review} />
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className={`grid gap-6 ${list.length > 2 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2 max-w-4xl mx-auto'}`}>
-          {list.map((review) => (
-            <ReviewCard key={review.name} review={review} />
-          ))}
-        </div>
-
-        <div className="mt-12 flex flex-wrap justify-center gap-4">
-          <a
-            href={reviewSummary.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 border border-white/20 px-8 py-4 text-white/60 hover:text-gold hover:border-gold/50 transition-all font-sans text-xs tracking-[0.2em] uppercase"
-          >
-            <Star className="w-4 h-4 text-gold fill-gold" aria-hidden="true" />
+        <div className="mt-16 flex flex-wrap gap-x-10 gap-y-4" data-reveal>
+          <ArrowLink href={reviewSummary.url} external>
             Alle reviews op Treatwell
-            <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </a>
-          <a
-            href={business.maps.place}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 border border-white/20 px-8 py-4 text-white/60 hover:text-gold hover:border-gold/50 transition-all font-sans text-xs tracking-[0.2em] uppercase"
-          >
+          </ArrowLink>
+          <ArrowLink href={business.maps.place} external>
             Reviews op Google
-            <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </a>
+          </ArrowLink>
         </div>
       </div>
     </section>
   );
 }
 
-export function FaqSection({ page, title }: { page: PageMeta; title?: ReactNode }) {
+export function FaqSection({ page, title, number }: { page: PageMeta; title?: ReactNode; number?: string }) {
   const items = faqsFor(page.id);
   if (!items.length) return null;
   return (
-    <section id="vragen" className="py-32 relative overflow-hidden scroll-mt-24">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#080808] to-[#0a0a0a]" />
-      <div className="relative max-w-4xl mx-auto px-8">
-        <div className="text-center mb-16">
-          <SectionLabel center>Vragen</SectionLabel>
-          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl mb-4">
-            {title ?? (
-              <>
-                Veelgestelde <span className="italic text-gold">vragen</span>
-              </>
-            )}
-          </h2>
+    <section id="vragen" className="py-28 md:py-36 scroll-mt-20">
+      <div className="max-w-5xl mx-auto px-6 md:px-8">
+        <SectionTitle number={number} eyebrow="Vragen">
+          {title ?? (
+            <>
+              Veelgestelde <em className="text-gold">vragen</em>
+            </>
+          )}
+        </SectionTitle>
+        <div data-reveal>
+          <FaqList items={items} />
         </div>
-        <FaqList items={items} />
-        <div className="mt-16 text-center border border-white/10 p-8 bg-[#080808]">
-          <HelpCircle className="w-8 h-8 text-gold mx-auto mb-4" aria-hidden="true" />
-          <p className="text-white/60 mb-2">Nog een vraag?</p>
-          <p className="text-white/40 text-sm mb-4">Bel of app me gerust.</p>
-          <div className="flex flex-wrap justify-center gap-6">
-            <a href={business.phone.href} className="inline-flex items-center gap-2 text-gold hover:text-white transition-colors font-sans text-xs tracking-[0.2em] uppercase">
-              <Phone className="w-4 h-4" aria-hidden="true" />
-              {business.phone.display}
-            </a>
-            <a
-              href={business.phone.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-gold hover:text-white transition-colors font-sans text-xs tracking-[0.2em] uppercase"
-            >
-              <MessageCircle className="w-4 h-4" aria-hidden="true" />
-              WhatsApp
-            </a>
-          </div>
-        </div>
+        <p className="mt-10 text-white/50 text-sm" data-reveal>
+          Staat je vraag er niet tussen? Bel{' '}
+          <a href={business.phone.href} className="text-gold hover:text-white transition-colors">
+            {business.phone.plain}
+          </a>{' '}
+          of{' '}
+          <a href={business.phone.whatsapp} target="_blank" rel="noopener noreferrer" className="text-gold hover:text-white transition-colors">
+            stuur een appje
+          </a>
+          .
+        </p>
       </div>
     </section>
   );
@@ -298,145 +398,151 @@ export function FaqSection({ page, title }: { page: PageMeta; title?: ReactNode 
 
 export function OpeningHoursList() {
   return (
-    <div className="space-y-0 border-t border-white/10">
+    <dl className="border-t border-white/10">
       {openingHours.map((d) => (
-        <div
-          key={d.day}
-          className={`flex justify-between items-center py-2.5 border-b border-white/5 ${d.opens ? '' : 'opacity-40'}`}
-        >
-          <span className={`text-sm font-sans tracking-wide ${d.opens ? 'text-white/70' : 'text-white/40'}`}>{d.day}</span>
-          <span className={`text-sm font-sans ${d.opens ? 'text-gold/80' : 'text-white/30 italic'}`}>
-            {d.opens ? `${d.opens} — ${d.closes}` : 'Gesloten'}
-          </span>
+        <div key={d.day} className="flex justify-between items-center py-3 border-b border-white/[0.06]">
+          <dt className={`text-sm ${d.opens ? 'text-white/70' : 'text-white/35'}`}>{d.day}</dt>
+          <dd className={`text-sm tabular-nums ${d.opens ? 'text-white/85' : 'text-white/30'}`}>
+            {d.opens ? `${d.opens} – ${d.closes}` : 'Gesloten'}
+          </dd>
         </div>
       ))}
-    </div>
+    </dl>
   );
 }
 
 export function ContactDetails() {
   const a = business.address;
   return (
-    <div className="space-y-8">
-      <Spotlight className="flex items-start gap-6 group p-2 -m-2">
-        <div className="w-12 h-12 border border-gold/30 flex items-center justify-center flex-shrink-0 group-hover:border-gold group-hover:bg-gold/5 transition-all">
-          <MapPin className="w-5 h-5 text-gold" aria-hidden="true" />
-        </div>
-        <div>
-          <h3 className="text-xs tracking-[0.2em] uppercase text-white/40 mb-2 font-sans">Adres</h3>
-          <address className="not-italic text-lg">
-            {a.street}
-            <br />
-            {a.postalCode} {a.city}
-          </address>
-          <p className="text-white/40 text-sm mt-1">Wijk {a.district}</p>
-          <a
-            href={business.maps.directions}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 mt-3 text-gold text-xs tracking-[0.2em] uppercase hover:text-white transition-colors"
-          >
-            <Navigation className="w-4 h-4" aria-hidden="true" />
+    <div className="grid gap-12 sm:grid-cols-2">
+      <div>
+        <p className="eyebrow mb-5">
+          <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+          Adres
+        </p>
+        <address className="not-italic font-serif text-2xl leading-snug">
+          {a.street}
+          <br />
+          {a.postalCode} {a.city}
+        </address>
+        <p className="text-white/45 text-sm mt-2">
+          {a.district}, {a.area}
+        </p>
+        <div className="mt-5">
+          <ArrowLink href={business.maps.directions} external>
             Route plannen
+          </ArrowLink>
+        </div>
+      </div>
+      <div>
+        <p className="eyebrow mb-5">
+          <Phone className="w-3.5 h-3.5" aria-hidden="true" />
+          Bellen of appen
+        </p>
+        <p className="font-serif text-2xl">
+          <a href={business.phone.href} className="hover:text-gold transition-colors">
+            {business.phone.display}
           </a>
+        </p>
+        <div className="mt-5">
+          <ArrowLink href={business.phone.whatsapp} external>
+            WhatsApp
+          </ArrowLink>
         </div>
-      </Spotlight>
-
-      <Spotlight className="flex items-start gap-6 group p-2 -m-2">
-        <div className="w-12 h-12 border border-gold/30 flex items-center justify-center flex-shrink-0 group-hover:border-gold group-hover:bg-gold/5 transition-all">
-          <Phone className="w-5 h-5 text-gold" aria-hidden="true" />
-        </div>
-        <div>
-          <h3 className="text-xs tracking-[0.2em] uppercase text-white/40 mb-2 font-sans">Telefoon & WhatsApp</h3>
-          <p className="text-lg">
-            <a href={business.phone.href} className="hover:text-gold transition-colors">
-              {business.phone.display}
-            </a>
-          </p>
-          <a
-            href={business.phone.whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 mt-3 text-gold text-xs tracking-[0.2em] uppercase hover:text-white transition-colors"
-          >
-            <MessageCircle className="w-4 h-4" aria-hidden="true" />
-            Stuur een appje
-          </a>
-        </div>
-      </Spotlight>
-
-      <Spotlight className="flex items-start gap-6 group p-2 -m-2">
-        <div className="w-12 h-12 border border-gold/30 flex items-center justify-center flex-shrink-0 group-hover:border-gold group-hover:bg-gold/5 transition-all">
-          <Clock className="w-5 h-5 text-gold" aria-hidden="true" />
-        </div>
-        <div className="flex-1 max-w-sm">
-          <h3 className="text-xs tracking-[0.2em] uppercase text-white/40 mb-4 font-sans">Openingstijden</h3>
-          <OpeningHoursList />
-          <p className="text-white/40 text-xs mt-3">Uitsluitend op afspraak.</p>
-        </div>
-      </Spotlight>
+      </div>
+      <div className="sm:col-span-2 max-w-md">
+        <p className="eyebrow mb-5">Openingstijden</p>
+        <OpeningHoursList />
+        <p className="text-white/40 text-xs mt-3">Uitsluitend op afspraak.</p>
+      </div>
     </div>
   );
 }
 
 export function MapEmbed() {
   return (
-    <TiltCard className="contact-map relative">
-      <div className="aspect-square border border-white/10 overflow-hidden">
-        <iframe
-          src={business.maps.embed}
-          width="100%"
-          height="100%"
-          style={{ border: 0, filter: 'grayscale(100%) invert(92%) contrast(83%)' }}
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          title="Kaart: Barber Iwan, Michelangelostraat 195 in Almere"
-        />
-      </div>
-      <div className="absolute -top-4 -left-4 w-full h-full border border-gold/20 -z-10" />
-    </TiltCard>
+    <div className="relative aspect-square lg:aspect-auto lg:h-full min-h-[360px] border border-white/10 overflow-hidden" data-reveal>
+      <iframe
+        src={business.maps.embed}
+        width="100%"
+        height="100%"
+        className="absolute inset-0"
+        style={{ border: 0, filter: 'grayscale(100%) invert(92%) contrast(83%)' }}
+        allowFullScreen
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        title="Kaart: Barber Iwan, Michelangelostraat 195 in Almere"
+      />
+    </div>
   );
 }
 
 export function CtaSection({ title, text, href }: { title?: ReactNode; text?: string; href?: string }) {
   return (
-    <section className="py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gold/5 to-transparent" />
+    <section className="py-28 md:py-40 relative overflow-hidden border-t border-white/[0.06]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(201,168,74,0.08)_0%,_transparent_60%)]" />
-      <div className="relative max-w-4xl mx-auto px-8 text-center">
-        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl mb-6">
+      <div className="relative max-w-4xl mx-auto px-6 md:px-8 text-center" data-reveal>
+        <h2 className="font-serif text-5xl md:text-6xl lg:text-7xl leading-[1.02] mb-8">
           {title ?? (
             <>
-              Klaar voor een <span className="italic text-gold">nieuwe look</span>?
+              Klaar voor een <em className="text-gold">nieuwe look</em>?
             </>
           )}
         </h2>
-        <p className="text-white/60 mb-10 font-light">
-          {text ?? 'Boek je afspraak en ervaar het verschil van ruim dertig jaar vakmanschap.'}
-        </p>
-        <BookButton href={href} />
+        <p className="text-white/55 mb-12 text-lg">{text ?? 'Ruim dertig jaar vakmanschap, één afspraak verwijderd.'}</p>
+        <div className="flex flex-wrap justify-center gap-4">
+          <BookButton href={href} />
+          <a href={business.phone.href} className="btn btn-ghost">
+            <Phone className="w-4 h-4" aria-hidden="true" />
+            {business.phone.plain}
+          </a>
+        </div>
       </div>
     </section>
   );
 }
 
 // Doorverwijzing naar verwante pagina's onderaan een subpagina.
-export function RelatedPages({ ids }: { ids: PageMeta['id'][] }) {
+export function RelatedPages({ ids }: { ids: PageId[] }) {
   return (
-    <section className="pb-24">
-      <div className="max-w-5xl mx-auto px-8 grid gap-4 md:grid-cols-3">
-        {ids.map((id) => (
-          <a
-            key={id}
-            href={pages[id].path}
-            className="group border border-white/10 p-6 hover:border-gold/40 transition-colors flex items-center justify-between"
-          >
-            <span className="font-serif text-2xl">{pages[id].label}</span>
-            <ArrowRight className="w-5 h-5 text-gold group-hover:translate-x-2 transition-transform" aria-hidden="true" />
-          </a>
-        ))}
+    <section className="pb-28">
+      <div className="max-w-7xl mx-auto px-6 md:px-8">
+        <p className="eyebrow mb-8">Verder lezen</p>
+        <ul className="grid gap-px bg-white/10 border border-white/10 md:grid-cols-3">
+          {ids.map((id) => (
+            <li key={id} className="bg-[#080808]">
+              <a href={pages[id].path} className="group flex items-center justify-between p-8 hover:bg-white/[0.02] transition-colors">
+                <span className="font-serif text-2xl md:text-3xl">{pages[id].label}</span>
+                <ArrowRight className="w-5 h-5 text-gold transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
+  );
+}
+
+export function Marquee() {
+  const items = ['Fades', 'Tapers', 'Line-ups', 'Baard', 'Black & Mixed hair', 'Krullen & afro', 'Geschoren figuren', 'Kinderen', 'Klassieke coupes'];
+  const row = (hidden: boolean) => (
+    <ul className="flex shrink-0 items-center" aria-hidden={hidden || undefined}>
+      {items.map((item) => (
+        <li key={item} className="flex items-center font-serif italic text-3xl md:text-4xl text-white/70 px-8">
+          {item}
+          <span className="ml-16 text-gold not-italic text-base" aria-hidden="true">
+            ✦
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <div className="marquee overflow-hidden border-y border-white/[0.06] py-8 select-none">
+      <div className="marquee-track">
+        {row(false)}
+        {row(true)}
+      </div>
+    </div>
   );
 }

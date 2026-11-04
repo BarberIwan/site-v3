@@ -8,6 +8,8 @@ const byPage: Partial<Record<PageId, (keyof typeof faqs)[]>> = {
   prijzen: ['duur', 'betalen', 'annuleren'],
   'black-hair': ['blackKapsels', 'figuren'],
   kinderen: ['kinderLeeftijd', 'kinderSamen'],
+  fade: ['fadeVerschil', 'fadeSoort', 'fadeOnderhoud'],
+  baard: ['baardVaak', 'baardCombi'],
   contact: ['waar', 'parkeren'],
 };
 
