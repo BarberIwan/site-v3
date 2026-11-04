@@ -20,7 +20,8 @@ const xmlEscape = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const imagesOnPage: Partial<Record<PageId, Photo[]>> = {
-  home: [photos.midFade, photos.afroTop, photos.cornrows, photos.taper, photos.design, photos.wavy, photos.longHair],
+  over: [photos.iwan],
+  home: [photos.iwan, photos.midFade, photos.afroTop, photos.cornrows, photos.taper, photos.design, photos.wavy, photos.longHair],
   haircuts: allWork,
   fade: [photos.buzz, ...photosTagged('fades').slice(0, 4)],
   'black-hair': [photos.afroTop, photos.afro, photos.design, photos.cornrows, photos.wavy],

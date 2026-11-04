@@ -423,6 +423,7 @@ export function About() {
             Iwan knipt al ruim dertig jaar, en nog steeds met veel plezier. Elke klant kan een keurige, strakke knipbeurt verwachten, welk haartype je ook hebt.
           </p>
         }
+        photo={photos.iwan}
       />
 
       <section className="py-24 border-t border-white/[0.06]">

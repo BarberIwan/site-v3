@@ -324,6 +324,7 @@ export const photoSrc = (p: Photo) => `/foto/${p.slug}.jpg`;
 export const photoWebp = (p: Photo, w: number) => `/img/${p.slug}-${w}.webp`;
 
 const P = {
+  iwan: photo('iwan-barber-almere', 1125, 1688, [480, 900], 'Iwan in de salon', 'Iwan naast de kappersstoel in zijn salon aan de Michelangelostraat.', 'Barber Iwan in leren schort naast de kappersstoel in zijn salon in Almere', []),
   midFade: photo('mid-fade-krullen-baard', 900, 1200, [480, 900], 'Krullen met mid fade', 'Krullend bovenhaar, een mid fade en een volle, strak getrimde baard.', 'Man met krullend bovenhaar, mid fade en volle getrimde baard, van opzij', ['fades', 'krullen', 'baard']),
   cornrows: photo('contouren-cornrows', 900, 1200, [480, 900], 'Contouren bij vlechten', 'Strak bijgewerkte zijkanten en lijnen rond cornrows.', 'Jongeman met cornrows en strak bijgewerkte contouren, van opzij', ['lijnen']),
   taper: photo('klassieke-taper', 900, 1200, [480, 900], 'Klassieke taper', 'Donker, steil haar met een nette taper in de nek.', 'Klassiek herenkapsel met taper in de nek, van achteren', ['klassiek', 'fades']),

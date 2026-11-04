@@ -24,6 +24,8 @@ GOLD = (201, 168, 74)
 # bron in public/ -> (beschrijvende naam, breedtes in px). De naam komt in de
 # URL van de foto terecht; Google Afbeeldingen leest die mee.
 PHOTOS = {
+    # Portret van Iwan in de salon; het origineel staat buiten public/.
+    "design/fotos/iwan-portret.jpg": ("iwan-barber-almere", (480, 900)),
     "7BA86E7C-5624-4FB8-B92B-ED7F1729ACC7.jpg": ("mid-fade-krullen-baard", (480, 900)),
     "7367F35C-CC28-43C5-A6F7-E786E6FD6D31.jpg": ("contouren-cornrows", (480, 900)),
     "ECE8A51A-C1C4-4D31-9604-795D3E8BC503.jpg": ("klassieke-taper", (480, 900)),
@@ -50,7 +52,7 @@ def save_webp(im: Image.Image, path: Path, quality: int = 78) -> None:
 def photos() -> None:
     FOTO.mkdir(exist_ok=True)
     for name, (slug, widths) in PHOTOS.items():
-        src = Image.open(PUBLIC / name).convert("RGB")
+        src = Image.open((ROOT if name.startswith("design/") else PUBLIC) / name).convert("RGB")
         # Origineel onder de beschrijvende naam, als fallback voor browsers zonder WebP.
         src.save(FOTO / f"{slug}.jpg", quality=84, optimize=True, progressive=True)
         for w in widths:
@@ -105,32 +107,29 @@ def cover(path: str, w: int, h: int) -> Image.Image:
 def og_image(mark: Image.Image, fonts: Path | None) -> None:
     W, H = 1200, 630
     canvas = Image.new("RGB", (W, H), BG)
-    strip = 220
-    for i, name in enumerate(
-        (
-            "7BA86E7C-5624-4FB8-B92B-ED7F1729ACC7.jpg",
-            "7367F35C-CC28-43C5-A6F7-E786E6FD6D31.jpg",
-            "ig-3.jpg",
-        )
-    ):
-        tile = ImageEnhance.Brightness(cover(name, strip, H)).enhance(0.85)
-        canvas.paste(tile, (i * strip, 0))
+    # Links het portret van Iwan, rechts logo en tekst.
+    left = 470
+    portrait = Image.open(ROOT / "design/fotos/iwan-portret.jpg").convert("RGB")
+    ratio = max(left / portrait.width, H / portrait.height)
+    portrait = portrait.resize((round(portrait.width * ratio), round(portrait.height * ratio)), Image.LANCZOS)
+    x = (portrait.width - left) // 2 + round(portrait.width * 0.12)
+    canvas.paste(portrait.crop((x, 0, x + left, H)), (0, 0))
     draw = ImageDraw.Draw(canvas)
-    x0 = 3 * strip
-    draw.line([(x0, 0), (x0, H)], fill=GOLD, width=2)
-    panel_w = W - x0
-    ratio = (panel_w - 120) / mark.width
+    draw.line([(left, 0), (left, H)], fill=GOLD, width=2)
+    panel_w = W - left
+    ratio = (panel_w - 160) / mark.width
     m = mark.resize((round(mark.width * ratio), round(mark.height * ratio)), Image.LANCZOS)
-    canvas.paste(m, (x0 + (panel_w - m.width) // 2, 120), m)
+    top = 120
+    canvas.paste(m, (left + (panel_w - m.width) // 2, top), m)
     if fonts:
-        serif = ImageFont.truetype(str(fonts / "cormorant-italic.ttf"), 38)
+        serif = ImageFont.truetype(str(fonts / "cormorant-italic.ttf"), 40)
         sans = ImageFont.truetype(str(fonts / "montserrat-500.ttf"), 16)
         for text, font, y, fill in (
-            ("Herenkapper & barber in Almere", serif, 120 + m.height + 40, (240, 240, 240)),
-            ("MICHELANGELOSTRAAT 195 · TUSSEN DE VAARTEN", sans, 120 + m.height + 110, GOLD),
+            ("Kapper & barber in Almere Stad", serif, top + m.height + 40, (240, 240, 240)),
+            ("MICHELANGELOSTRAAT 195 · SINDS 1994", sans, top + m.height + 108, GOLD),
         ):
             tw = draw.textlength(text, font=font)
-            draw.text((x0 + (panel_w - tw) / 2, y), text, font=font, fill=fill)
+            draw.text((left + (panel_w - tw) / 2, y), text, font=font, fill=fill)
     canvas.save(PUBLIC / "og-barber-iwan.jpg", quality=86, optimize=True, progressive=True)
 
 

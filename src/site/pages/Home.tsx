@@ -69,24 +69,32 @@ function Hero() {
 function About() {
   return (
     <section id="over" className="py-28 md:py-40 scroll-mt-20">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 grid gap-16 lg:grid-cols-2 lg:gap-24">
-        <div data-reveal>
+      <div className="max-w-7xl mx-auto px-6 md:px-8 grid gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24 items-center">
+        <figure data-reveal>
+          <div className="relative aspect-[3/4] max-w-md overflow-hidden border border-white/10">
+            <Picture photo={photos.iwan} sizes="(min-width: 1024px) 440px, 90vw" />
+          </div>
+          <figcaption className="mt-4 text-sm text-white/45">
+            Iwan in zijn salon in {business.address.district}
+          </figcaption>
+        </figure>
+        <div data-reveal style={d(100)}>
           <Eyebrow number="01">Over Iwan</Eyebrow>
-          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05]">
+          <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-[1.05] mb-10">
             Ruim dertig jaar <em className="text-gold">passie voor het vak</em>
           </h2>
-          <blockquote className="mt-12 border-l border-gold/50 pl-8 font-serif italic text-2xl md:text-3xl text-white/80 leading-snug max-w-md">
+          <div className="space-y-6 text-white/60 leading-relaxed text-lg">
+            <p>
+              Wat begon als een jongensdroom in {business.since}, groeide uit tot een levenslange missie: het ambacht van het barbierschap perfectioneren. Ik knip alle haartypes — Europees, Aziatisch, Black en Mixed hair — elk met zijn eigen eigenschappen.
+            </p>
+            <p>
+              Bij Barber Iwan draait het niet alleen om een knipbeurt. Het is een moment van rust, persoonlijke aandacht en het vertrouwen dat je in goede handen bent.
+            </p>
+          </div>
+          <blockquote className="mt-10 border-l border-gold/50 pl-8 font-serif italic text-2xl md:text-3xl text-white/80 leading-snug max-w-lg">
             “Een goede barber begrijpt niet alleen haar, maar de persoon erachter.”
           </blockquote>
-        </div>
-        <div className="space-y-6 text-white/60 leading-relaxed text-lg" data-reveal style={d(100)}>
-          <p>
-            Wat begon als een jongensdroom in {business.since}, groeide uit tot een levenslange missie: het ambacht van het barbierschap perfectioneren. Ik knip alle haartypes — Europees, Aziatisch, Black en Mixed hair — elk met zijn eigen eigenschappen.
-          </p>
-          <p>
-            Bij Barber Iwan draait het niet alleen om een knipbeurt. Het is een moment van rust, persoonlijke aandacht en het vertrouwen dat je in goede handen bent. Van een strakke taper fade tot een geschoren figuur: elk kapsel krijgt de tijd die het nodig heeft.
-          </p>
-          <dl className="grid grid-cols-3 gap-6 pt-10 mt-4 border-t border-white/10">
+          <dl className="grid grid-cols-3 gap-6 pt-10 mt-12 border-t border-white/10">
             {[
               { value: '30+', label: 'Jaar ervaring' },
               { value: '4', label: 'Haartypes' },
@@ -99,7 +107,7 @@ function About() {
               </div>
             ))}
           </dl>
-          <div className="pt-6">
+          <div className="pt-10">
             <ArrowLink href={pages.over.path}>Het verhaal van Iwan</ArrowLink>
           </div>
         </div>
