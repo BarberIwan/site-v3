@@ -180,8 +180,12 @@ AI-crawlers lezen de inhoud zonder JavaScript.
 - Alle feiten (adres, tijden, prijzen, reviews, FAQ, foto's): `src/site/data.ts`
 - Pagina's, titels en descriptions: `src/site/pages.ts`
 - Structured data: `src/site/seo.ts`; sitemap en llms.txt: `src/site/feeds.ts`
-- Nieuwe foto? Zet hem in `public/`, voeg hem toe in `data.ts` en draai
-  `npm run images` voor de WebP-versies.
+- Nieuwe foto? Zet hem in `public/`, geef hem een beschrijvende naam in
+  `scripts/optimize-images.py`, voeg hem toe in `data.ts` (met tags voor het
+  galerijfilter) en draai `npm run images`.
+- Lettertypen staan in `public/fonts/` (OFL); geen Google Fonts.
+- Lokale SEO buiten de site (bedrijfsprofiel, reviews, vermeldingen):
+  `docs/lokale-seo.md`
 - Server, omleidingen en controles na een deploy: `deploy/README.md`
 
 ## Contact

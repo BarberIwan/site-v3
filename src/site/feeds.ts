@@ -5,13 +5,13 @@ import {
   SITE_URL,
   allWork,
   business,
-  extra,
   openingSummary,
   photoSrc,
+  photos,
+  photosTagged,
   reviewSummary,
   serviceGroups,
   servicesIn,
-  work,
   type Photo,
 } from './data';
 import { pages, type PageId } from './pages';
@@ -20,17 +20,19 @@ const xmlEscape = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const imagesOnPage: Partial<Record<PageId, Photo[]>> = {
-  home: work,
+  home: [photos.midFade, photos.afroTop, photos.cornrows, photos.taper, photos.design, photos.wavy, photos.longHair],
   haircuts: allWork,
-  'black-hair': [extra.afro, extra.design],
-  kinderen: [extra.kid],
+  fade: [photos.buzz, ...photosTagged('fades').slice(0, 4)],
+  'black-hair': [photos.afroTop, photos.afro, photos.design, photos.cornrows, photos.wavy],
+  baard: [photos.fullBeard, ...photosTagged('baard').slice(0, 4)],
+  kinderen: [photos.kid],
 };
 
 export function sitemapXml(): string {
   const urls = Object.values(pages)
     .filter((p) => p.sitemap)
     .map((p) => {
-      const images = (imagesOnPage[p.id] ?? [])
+      const images = [...new Map((imagesOnPage[p.id] ?? []).map((img) => [img.slug, img])).values()]
         .map(
           (img) =>
             `\n    <image:image><image:loc>${SITE_URL}${xmlEscape(photoSrc(img))}</image:loc></image:image>`,
@@ -67,7 +69,7 @@ export function llmsTxt(): string {
     .join('\n');
   return `# ${business.name}
 
-> Herenkapper en barber in ${a.city} (${a.district}). Ruim dertig jaar ervaring met Europees, Aziatisch, Black en Mixed hair. Knippen, fades, baard en kinderkapsels. Uitsluitend op afspraak.
+> Kapper en barber in ${a.area} (${a.district}, ${a.city}). Ruim dertig jaar ervaring met Europees, Aziatisch, Black en Mixed hair. Knippen, fades, baard en kinderkapsels. Uitsluitend op afspraak.
 
 ## Contact
 - Adres: ${a.street}, ${a.postalCode} ${a.city}

@@ -10,11 +10,11 @@ import {
   SITE_URL,
   allWork,
   business,
-  extra,
   hairTypes,
   openingHours,
   photoSrc,
   photoWebp,
+  photos,
   priceRange,
   serviceById,
   services,
@@ -61,7 +61,7 @@ function salon(withCatalog: boolean): Json {
     '@type': 'HairSalon',
     '@id': ids.salon,
     name: business.name,
-    description: `Herenkapper en barber in Almere met ruim dertig jaar ervaring in ${hairTypes
+    description: `Kapper en barber in ${business.address.area} met ruim dertig jaar ervaring in ${hairTypes
       .slice(0, -1)
       .join(', ')} en ${hairTypes.at(-1)} hair. Knippen, fades, baard en kinderkapsels, op afspraak.`,
     url: abs('/'),
@@ -90,6 +90,7 @@ function salon(withCatalog: boolean): Json {
       },
     ],
     areaServed: { '@type': 'City', name: 'Almere' },
+    containedInPlace: { '@type': 'Place', name: `${business.address.district}, ${business.address.area}` },
     founder: { '@id': ids.iwan },
     sameAs: [business.instagram.url, business.facebook, business.treatwell],
     knowsAbout: ['Fades', 'Tapers', 'Black hair', 'Mixed hair', 'Krullend haar', 'Baardverzorging', 'Kinderkapsels'],
@@ -109,6 +110,8 @@ const iwan: Json = {
   '@id': ids.iwan,
   name: business.owner,
   jobTitle: 'Barber',
+  url: abs(pages.over.path),
+  description: `Barber sinds ${business.since}, gespecialiseerd in Europees, Aziatisch, Black en Mixed hair.`,
   worksFor: { '@id': ids.salon },
   knowsAbout: ['Europees haar', 'Aziatisch haar', 'Black hair', 'Mixed hair', 'Fades', 'Geschoren figuren'],
 };
@@ -125,6 +128,7 @@ const website: Json = {
 const pageTypes: Partial<Record<PageMeta['id'], string>> = {
   haircuts: 'CollectionPage',
   contact: 'ContactPage',
+  over: 'AboutPage',
 };
 
 function webpage(page: PageMeta): Json {
@@ -141,6 +145,7 @@ function webpage(page: PageMeta): Json {
     dateModified: CONTENT_DATE,
     primaryImageOfPage: { '@type': 'ImageObject', url: OG_IMAGE, width: 1200, height: 630 },
     ...(page.id === 'home' ? {} : { breadcrumb: { '@id': `${url}#breadcrumb` } }),
+    ...(page.id === 'over' ? { mainEntity: { '@id': ids.iwan } } : {}),
   };
 }
 
@@ -219,6 +224,18 @@ export function structuredData(page: PageMeta): Json {
       ]),
     );
   }
+  if (page.id === 'fade') {
+    graph.push(service(page, 'Fade knippen', 'Herenkapper', [serviceById('knippen'), serviceById('knippen-baard')]));
+  }
+  if (page.id === 'baard') {
+    graph.push(
+      service(page, 'Baard trimmen', 'Baardverzorging', [
+        serviceById('baard'),
+        serviceById('knippen-baard'),
+        serviceById('late-knippen-baard'),
+      ]),
+    );
+  }
   if (page.id === 'haircuts') graph.push(gallery(page));
   return { '@context': 'https://schema.org', '@graph': graph };
 }
@@ -255,11 +272,11 @@ export function headTags(page: PageMeta): string {
     '<link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="/img/logo-336.webp 336w, /img/logo-672.webp 672w" imagesizes="336px" />',
   );
   if (page.id === 'home') {
-    const hero = extra.hero;
+    const hero = photos.midFade;
     tags.push(
-      `<link rel="preload" as="image" type="image/webp" imagesrcset="${hero.webp
+      `<link rel="preload" as="image" type="image/webp" fetchpriority="high" imagesrcset="${hero.webp
         .map((w) => `${photoWebp(hero, w)} ${w}w`)
-        .join(', ')}" imagesizes="100vw" />`,
+        .join(', ')}" imagesizes="(min-width: 1024px) 460px, 80vw" />`,
     );
   }
   if (!page.noindex) {

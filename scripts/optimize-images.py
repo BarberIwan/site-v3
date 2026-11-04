@@ -16,30 +16,30 @@ ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "public"
 OUT = PUBLIC / "img"
 OUT.mkdir(exist_ok=True)
+FOTO = PUBLIC / "foto"
 
 BG = (8, 8, 8)
 GOLD = (201, 168, 74)
 
-# bron -> breedtes in px (nooit groter dan het origineel)
+# bron in public/ -> (beschrijvende naam, breedtes in px). De naam komt in de
+# URL van de foto terecht; Google Afbeeldingen leest die mee.
 PHOTOS = {
-    "7BA86E7C-5624-4FB8-B92B-ED7F1729ACC7.jpg": (480, 900),
-    "ECE8A51A-C1C4-4D31-9604-795D3E8BC503.jpg": (480, 900),
-    "C61F0EF9-D76E-4DD4-AA20-F9F5ADF5E800.jpg": (480, 900),
-    "7367F35C-CC28-43C5-A6F7-E786E6FD6D31.jpg": (480, 900),
-    "9AA8A269-A960-4E8A-B7B7-22A7C1038927.jpg": (480, 900),
-    "CF0D0669-07E7-485C-8260-C9BED93B82F8.jpg": (480, 900),
-    "2D8D9132-0A24-4FA7-B8A7-3D3A91395F3F.jpg": (480, 1024),
-    "ig-1.jpg": (400, 900),
-    "ig-2.jpg": (400, 900),
-    "ig-3.jpg": (400, 900),
-    "ig-4.jpg": (400, 900),
-    "ig-5.jpg": (400, 900),
-    "ig-6.jpg": (400, 1026),
-    "carousel-1.jpg": (488,),
-    "carousel-2.jpg": (488,),
-    "carousel-3.jpg": (488,),
-    "hero-barber.jpg": (600, 864),
-    "tools-flatlay.jpg": (720, 1344),
+    "7BA86E7C-5624-4FB8-B92B-ED7F1729ACC7.jpg": ("mid-fade-krullen-baard", (480, 900)),
+    "7367F35C-CC28-43C5-A6F7-E786E6FD6D31.jpg": ("contouren-cornrows", (480, 900)),
+    "ECE8A51A-C1C4-4D31-9604-795D3E8BC503.jpg": ("klassieke-taper", (480, 900)),
+    "C61F0EF9-D76E-4DD4-AA20-F9F5ADF5E800.jpg": ("buzzcut-fade", (480, 900)),
+    "CF0D0669-07E7-485C-8260-C9BED93B82F8.jpg": ("korte-crop-fade", (480, 900)),
+    "2D8D9132-0A24-4FA7-B8A7-3D3A91395F3F.jpg": ("lange-pony-low-taper", (480, 1024)),
+    "9AA8A269-A960-4E8A-B7B7-22A7C1038927.jpg": ("kaal-geschoren-baard", (480, 900)),
+    "ig-3.jpg": ("afro-top-taper-fade", (400, 900)),
+    "ig-2.jpg": ("textured-top-fade", (400, 900)),
+    "ig-4.jpg": ("lang-haar-fade-baard", (400, 900)),
+    "ig-5.jpg": ("kort-opzij-volle-baard", (400, 900)),
+    "ig-6.jpg": ("golvend-low-taper", (400, 1026)),
+    "ig-1.jpg": ("recht-afgeknipt", (400, 900)),
+    "carousel-1.jpg": ("kinderkapsel-fade", (488,)),
+    "carousel-2.jpg": ("geschoren-figuur-krullen", (488,)),
+    "carousel-3.jpg": ("afro-taper-fade", (488,)),
 }
 
 
@@ -48,13 +48,15 @@ def save_webp(im: Image.Image, path: Path, quality: int = 78) -> None:
 
 
 def photos() -> None:
-    for name, widths in PHOTOS.items():
+    FOTO.mkdir(exist_ok=True)
+    for name, (slug, widths) in PHOTOS.items():
         src = Image.open(PUBLIC / name).convert("RGB")
-        stem = Path(name).stem
+        # Origineel onder de beschrijvende naam, als fallback voor browsers zonder WebP.
+        src.save(FOTO / f"{slug}.jpg", quality=84, optimize=True, progressive=True)
         for w in widths:
             w = min(w, src.width)
             h = round(src.height * w / src.width)
-            save_webp(src.resize((w, h), Image.LANCZOS), OUT / f"{stem}-{w}.webp")
+            save_webp(src.resize((w, h), Image.LANCZOS), OUT / f"{slug}-{w}.webp")
 
 
 def logo() -> Image.Image:

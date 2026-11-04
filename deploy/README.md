@@ -41,6 +41,35 @@ Eenmalig instellen:
 Zonder secrets bouwt de workflow wel en zet hij de build als artefact
 (`dist-<commit>`) klaar; die kun je downloaden en met de hand uploaden.
 
+## Uitrollen in één keer plakken op de server
+
+Inloggen met `ssh root@185.107.90.72` en dit blok plakken. Het bouwt in een
+tijdelijke map en wisselt pas om als de build gelukt is; de oude versie blijft
+als `dist-vorige` staan.
+
+```bash
+(
+  set -e
+  export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"
+  nvm install 22 > /dev/null
+  rm -rf /tmp/site-v3-build
+  git clone -q --depth 1 https://github.com/BarberIwan/site-v3 /tmp/site-v3-build
+  cd /tmp/site-v3-build
+  npm ci --no-audit --no-fund --loglevel=error
+  npm run build > /tmp/site-v3-build.log 2>&1 || { echo "BUILD MISLUKT, er is niets veranderd"; tail -20 /tmp/site-v3-build.log; exit 1; }
+  cd /var/www/html/site-v3
+  rm -rf dist-nieuw dist-vorige
+  cp -a /tmp/site-v3-build/dist dist-nieuw
+  mv dist dist-vorige && mv dist-nieuw dist
+  echo "KLAAR. Live titel:"
+  curl -s https://barberiwan.nl/ | grep -o '<title>[^<]*'
+  node /tmp/site-v3-build/scripts/indexnow.mjs || true
+)
+```
+
+Terug naar de vorige versie:
+`cd /var/www/html/site-v3 && mv dist dist-mislukt && mv dist-vorige dist`
+
 ## Uitrollen met de hand
 
 1. Zet `dist/` op de plek waar nginx naar kijkt (nu `/var/www/html/site-v3/dist`).
