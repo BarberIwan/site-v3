@@ -19,27 +19,48 @@ npm run build        # tsc, client-build, SSR-build en prerender
 
 `.github/workflows/deploy.yml` doet het hele rondje: bouwen met Node 22,
 `dist/` naast de huidige versie zetten, omwisselen en een rookproef tegen de live
-site. Mislukt de rookproef, dan zet hij de vorige versie terug. Starten:
-Actions → "Deploy naar barberiwan.nl" → Run workflow.
+site. Mislukt de rookproef, dan zet hij de vorige versie terug. Hij draait vanzelf
+bij elke merge naar `main`, en met de hand via Actions → "Deploy naar
+barberiwan.nl" → Run workflow. Met het vinkje **nginx** zet hij ook
+`deploy/nginx/barberiwan.nl.conf` live (via `zet-live.sh`); bij een merge die
+`deploy/nginx/` raakt gebeurt dat vanzelf.
 
 Eenmalig instellen:
 
-1. Maak op je eigen computer een sleutelpaar alleen voor deze deploy:
-   `ssh-keygen -t ed25519 -C deploy-barberiwan -f deploy-barberiwan -N ""`
-2. Zet de inhoud van `deploy-barberiwan.pub` op de server achteraan in
-   `~/.ssh/authorized_keys` van de gebruiker die in `/var/www/html/site-v3` mag
-   schrijven.
-3. In GitHub, `site-v3` → Settings → Secrets and variables → Actions → New
-   repository secret:
+1. Log in op de server (`ssh root@185.107.90.72`) en plak dit blok. Het maakt een
+   sleutelpaar alleen voor deze deploy, geeft het toegang en toont de twee
+   waarden die GitHub nodig heeft:
+
+   ```bash
+   (
+     set -e
+     install -d -m 700 /root/.ssh
+     touch /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys
+     [ -f /root/.ssh/github-deploy ] || ssh-keygen -q -t ed25519 -N "" -C github-deploy-barberiwan -f /root/.ssh/github-deploy
+     grep -qF "$(cat /root/.ssh/github-deploy.pub)" /root/.ssh/authorized_keys || cat /root/.ssh/github-deploy.pub >> /root/.ssh/authorized_keys
+     echo; echo "===== DEPLOY_KNOWN_HOSTS ====="
+     for f in /etc/ssh/ssh_host_*_key.pub; do awk '{print "185.107.90.72 " $1 " " $2}' "$f"; done
+     echo "===== DEPLOY_SSH_KEY ====="
+     cat /root/.ssh/github-deploy
+     echo "====="
+   )
+   ```
+
+2. Zet in GitHub vier secrets, via
+   <https://github.com/BarberIwan/site-v3/settings/secrets/actions/new>:
    - `DEPLOY_HOST`: `185.107.90.72`
-   - `DEPLOY_USER`: die gebruiker (bijvoorbeeld `root`)
-   - `DEPLOY_SSH_KEY`: de inhoud van `deploy-barberiwan` (de private key)
-   - `DEPLOY_KNOWN_HOSTS`: de uitvoer van `ssh-keyscan -H 185.107.90.72`
-4. Staat de site ergens anders dan `/var/www/html/site-v3/dist`? Zet dan onder
+   - `DEPLOY_USER`: `root`
+   - `DEPLOY_KNOWN_HOSTS`: de regels onder `===== DEPLOY_KNOWN_HOSTS =====`
+   - `DEPLOY_SSH_KEY`: alles onder `===== DEPLOY_SSH_KEY =====`, van
+     `-----BEGIN OPENSSH PRIVATE KEY-----` tot en met de END-regel
+3. Staat de site ergens anders dan `/var/www/html/site-v3/dist`? Zet dan onder
    Variables `DEPLOY_PATH` op de map boven `dist`.
 
+De sleutel intrekken: verwijder de regel met `github-deploy-barberiwan` uit
+`/root/.ssh/authorized_keys` op de server.
+
 Zonder secrets bouwt de workflow wel en zet hij de build als artefact
-(`dist-<commit>`) klaar; die kun je downloaden en met de hand uploaden.
+(`dist-<commit>`) klaar; bij een merge slaat hij het uitrollen dan over.
 
 ## Uitrollen in één keer plakken op de server
 
