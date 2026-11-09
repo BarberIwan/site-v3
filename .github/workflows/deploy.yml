@@ -1,6 +1,8 @@
 name: Deploy naar barberiwan.nl
 
-# Handmatig starten: Actions → "Deploy naar barberiwan.nl" → Run workflow.
+# Draait vanzelf bij elke merge naar main, en met de hand via Actions →
+# "Deploy naar barberiwan.nl" → Run workflow (met het vinkje "nginx" zet hij ook
+# deploy/nginx/barberiwan.nl.conf live via deploy/nginx/zet-live.sh).
 #
 # Bouwt main met Node 22, zet dist/ naast de huidige versie op de server,
 # wisselt om en draait een rookproef tegen de live site. Mislukt die, dan
@@ -12,11 +14,20 @@ name: Deploy naar barberiwan.nl
 #   DEPLOY_USER         de SSH-gebruiker, bijvoorbeeld root
 #   DEPLOY_SSH_KEY      de private key van een sleutelpaar voor deze deploy;
 #                       de public key staat in ~/.ssh/authorized_keys op de server
-#   DEPLOY_KNOWN_HOSTS  de uitvoer van `ssh-keyscan -H 185.107.90.72`
+#   DEPLOY_KNOWN_HOSTS  de host keys van de server (zie deploy/README.md)
 # Optioneel, onder Variables: DEPLOY_PATH (standaard /var/www/html/site-v3).
 
 on:
   workflow_dispatch:
+    inputs:
+      nginx:
+        description: Ook de nginx-instelling (deploy/nginx) live zetten
+        type: boolean
+        default: false
+  # Elke merge naar main gaat vanzelf live. Zonder secrets slaat de workflow
+  # het uitrollen over en blijft hij groen; met de hand starten faalt dan wel.
+  push:
+    branches: [main]
 
 concurrency:
   group: deploy-productie
@@ -34,6 +45,8 @@ jobs:
       SITE: https://barberiwan.nl
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - uses: actions/setup-node@v4
         with:
@@ -67,6 +80,7 @@ jobs:
           retention-days: 14
 
       - name: Toegang tot de server
+        id: toegang
         env:
           KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
@@ -75,7 +89,13 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "$KEY" ] || [ -z "$KNOWN" ] || [ -z "$HOST" ] || [ -z "$LOGIN" ]; then
-            echo "::error::Secrets ontbreken (DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS). De build staat als artefact klaar."
+            melding="Secrets ontbreken (DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS). De build staat als artefact klaar."
+            if [ "$GITHUB_EVENT_NAME" = push ]; then
+              echo "::notice::$melding Niet uitgerold."
+              echo "ok=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::$melding"
             exit 1
           fi
           install -m 700 -d ~/.ssh
@@ -84,12 +104,15 @@ jobs:
           printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
           printf 'Host prod\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_deploy\n  StrictHostKeyChecking yes\n  BatchMode yes\n' "$HOST" "$LOGIN" > ~/.ssh/config
           ssh prod "test -d '$DEPLOY_PATH'" || { echo "::error::$DEPLOY_PATH bestaat niet op de server"; exit 1; }
+          echo "ok=true" >> "$GITHUB_OUTPUT"
 
       - name: Uploaden naast de huidige versie
+        if: steps.toegang.outputs.ok == 'true'
         run: rsync -az --delete dist/ "prod:$DEPLOY_PATH/dist-nieuw/"
 
       - name: Omwisselen
         id: wissel
+        if: steps.toegang.outputs.ok == 'true'
         run: |
           ssh prod "set -e; cd '$DEPLOY_PATH'; rm -rf dist-vorige; if [ -d dist ]; then mv dist dist-vorige; fi; mv dist-nieuw dist"
 
@@ -97,26 +120,46 @@ jobs:
       # de hash van deze build moet in de live HTML staan en bereikbaar zijn.
       - name: Rookproef
         id: rookproef
+        if: steps.toegang.outputs.ok == 'true'
         run: |
           set -euo pipefail
           sleep 3
           script=$(grep -o '/assets/index-[A-Za-z0-9_-]*\.js' dist/index.html | head -1)
           home=$(curl -fsS "$SITE/")
           grep -qF "$script" <<<"$home" || { echo "::error::live HTML noemt $script niet; de server serveert een andere map"; exit 1; }
-          grep -qF 'Herenkapper &amp; barber in Almere' <<<"$home"
+          grep -qF '"@type":"HairSalon"' <<<"$home" || { echo "::error::structured data ontbreekt op de homepage"; exit 1; }
           curl -fsS -o /dev/null "$SITE$script"
           curl -fsS "$SITE/behandelingen-en-prijzen/" | grep -qF '€ 32'
           test "$(curl -fsS "$SITE/sitemap.xml" | grep -c '<loc>')" -ge 7
           curl -fsS -o /dev/null "$SITE/img/logo-336.webp"
           echo "Live: $script"
 
+      # Alleen als erom gevraagd wordt, of als deze push deploy/nginx raakt. Het
+      # script test zelf, herlaadt, doet een rookproef en zet bij een fout de oude
+      # instelling terug; de site hierboven blijft dan staan.
+      - name: nginx-instelling
+        if: >-
+          steps.toegang.outputs.ok == 'true' &&
+          (inputs.nginx || (github.event_name == 'push' && github.event.before != ''))
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = push ] && git diff --quiet HEAD~1 HEAD -- deploy/nginx/; then
+            echo "deploy/nginx is niet veranderd; overgeslagen."
+            exit 0
+          fi
+          rsync -a --delete deploy/nginx/ prod:/tmp/barberiwan-nginx/
+          ssh prod "bash /tmp/barberiwan-nginx/zet-live.sh"
+
       # Bing en de andere IndexNow-zoekmachines meteen laten weten wat er nieuw is.
       - name: Zoekmachines inlichten (IndexNow)
+        if: steps.rookproef.outcome == 'success'
         continue-on-error: true
         run: node scripts/indexnow.mjs
 
+      # Alleen de site terugzetten als de rookproef van de site faalde (of niet
+      # meer kon draaien), niet als alleen de nginx-stap misging.
       - name: Vorige versie terugzetten
-        if: failure() && steps.wissel.outcome == 'success'
+        if: failure() && steps.wissel.outcome == 'success' && steps.rookproef.outcome != 'success'
         run: |
           ssh prod "set -e; cd '$DEPLOY_PATH'; if [ -d dist-vorige ]; then rm -rf dist-mislukt; mv dist dist-mislukt; mv dist-vorige dist; fi"
           echo "::warning::De vorige versie staat weer live; de mislukte build staat op de server in dist-mislukt."
