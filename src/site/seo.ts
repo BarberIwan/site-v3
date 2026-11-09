@@ -233,7 +233,6 @@ export function structuredData(page: PageMeta): Json {
       service(page, 'Baard trimmen', 'Baardverzorging', [
         serviceById('baard'),
         serviceById('knippen-baard'),
-        serviceById('late-knippen-baard'),
       ]),
     );
   }

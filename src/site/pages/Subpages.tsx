@@ -94,7 +94,7 @@ export function Prices() {
       />
       <section className="pb-28">
         <div className="max-w-5xl mx-auto px-6 md:px-8">
-          <PriceMenu groups={['heren', 'kinderen', 'late-night']} />
+          <PriceMenu groups={['heren', 'kinderen']} />
           <PricesNote />
         </div>
       </section>
@@ -328,7 +328,7 @@ export function Beard() {
               ]}
             />
           </div>
-          <PriceCard ids={['baard', 'knippen-baard', 'late-knippen-baard']} />
+          <PriceCard ids={['baard', 'knippen-baard']} />
         </div>
       </section>
 
