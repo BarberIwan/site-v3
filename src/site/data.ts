@@ -5,7 +5,7 @@
 export const SITE_URL = 'https://barberiwan.nl';
 
 // Datum waarop de inhoud hieronder voor het laatst is nagekeken (sitemap lastmod).
-export const CONTENT_DATE = '2026-10-26';
+export const CONTENT_DATE = '2026-11-09';
 export const CONTENT_YEAR = 2026;
 
 export const business = {
@@ -71,7 +71,7 @@ export function openingForJsDay(jsDay: number): OpeningDay {
   return openingHours[(jsDay + 6) % 7];
 }
 
-export type ServiceGroup = 'heren' | 'kinderen' | 'late-night';
+export type ServiceGroup = 'heren' | 'kinderen';
 
 export interface Service {
   id: string;
@@ -126,32 +126,11 @@ export const services: Service[] = [
     price: 22,
     group: 'kinderen',
   },
-  {
-    id: 'late-knippen',
-    name: 'Knippen — VIP late night',
-    description: 'Late afspraak buiten de vaste openingstijden.',
-    minutes: 30,
-    price: 50,
-    group: 'late-night',
-  },
-  {
-    id: 'late-knippen-baard',
-    name: 'Knippen + baard — VIP late night',
-    description: 'Kapsel en baard als late afspraak buiten de vaste openingstijden.',
-    minutes: 45,
-    price: 65,
-    group: 'late-night',
-  },
 ];
 
 export const serviceGroups: { id: ServiceGroup; title: string; intro: string }[] = [
   { id: 'heren', title: 'Heren', intro: 'Knippen, fades en baard voor elk haartype.' },
   { id: 'kinderen', title: 'Kinderen', intro: 'Rustig en vlot, voor jongens van 1 tot en met 12 jaar.' },
-  {
-    id: 'late-night',
-    title: 'VIP late night',
-    intro: 'Niet overdag kunnen? Kijk in de agenda welke late tijden er vrij zijn.',
-  },
 ];
 
 export const servicesIn = (group: ServiceGroup) => services.filter((s) => s.group === group);
